@@ -1,33 +1,44 @@
-import React, { useEffect, useState } from 'react'
-import axios from 'axios';
+import React from 'react'
+import { Box, Container, Tab, TabList, TabPanel, TabPanels, Tabs, Text } from '@chakra-ui/react';
+import Signup from '../../components/Authenticaltion/Signup';
+import Login from '../../components/Authenticaltion/login';
 
 const HomePage = () => {
 
-  // const [chats, setChats] = useState([]);
-  // const fetchChats = async () => {
-  //   const {data} = await axios.get("/api/chat", {
-  //     // proxy: {
-  //     //   protocol: "http",
-  //     //   host: "localhost",
-  //     //   port: 8080,
-  //     // },
-  //   });
-  //   setChats(data);
-  //   console.log("fetching data: " + data);
-  // }
-
-  // useEffect(() => {
-  //   fetchChats();
-  //   console.log("fetching chats: " + chats);
-  // }, []);
-
   return (
-    <div> Home Page
-      {/* {chats.map((chat) => (
-        <div key={chat._id}>{chat.chatName}</div>
-      ))} */}
-    </div>
-  )
+    <Container maxW="xl" centerContent>
+      <Box
+        d="flex"
+        justifyContent={"center"}
+        p={3}
+        bg={"white"}
+        w="100%"
+        m="40px 0 15px 0"
+        borderRadius={"lg"}
+        borderWidth={"1px"}
+      >
+        <Text fontSize={"4xl"} fontFamily={"Work sans"} color={"black"}>
+          Chai-N-Chat
+        </Text>
+      </Box>
+      <Box bg={"white"} w="100%" p={4} borderRadius={"lg"} color={"black"} borderWidth={"1px"}>
+        <Tabs variant="soft-rounded" >
+          <TabList mb="1em">
+            <Tab w={"50%"}>Login</Tab>
+            <Tab w={"50%"}>Sign Up</Tab>
+          </TabList>
+          <TabPanels>
+            <TabPanel>
+              <Login />
+            </TabPanel>
+            <TabPanel>
+              <Signup />
+            </TabPanel>
+          </TabPanels>
+        </Tabs>
+      </Box>
+    </Container>
+  );
 }
 
 export default HomePage;
