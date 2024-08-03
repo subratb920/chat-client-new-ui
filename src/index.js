@@ -12,15 +12,17 @@ const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<App />} StrictMode >
       <Route path="" element={<HomePage />} />
-      <Route path="chat" element={<ChatPage />} />
+      <Route path="chats" element={<ChatPage />} />
     </Route>
   )
 )
 root.render(
   <React.StrictMode>
+    <ChakraProvider>
       <ChakraProvider>
         <RouterProvider router={router} />
       </ChakraProvider>
+    </ChakraProvider>
   </React.StrictMode>
 );
 
