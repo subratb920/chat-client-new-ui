@@ -15,19 +15,19 @@ const ChatUsers = () => {
   const [loading, setLoading] = useState(false);
   const { user } = ChatState();
   const [chats, setChats] = useState([]);
-  const { toast } = useToast();
+  const toast = useToast();
 
   const handleSearch = async () => {
     if (!search) {
       setLoading(true);
       console.log("Please enter something in search");
-      // toast({
-      //   title: "Please Enter something in search",
-      //   status: "warning",
-      //   duration: 5000,
-      //   isClosable: true,
-      //   position: "top-left",
-      // });
+      toast({
+        title: "Please Enter something in search",
+        status: "warning",
+        duration: 5000,
+        isClosable: true,
+        position: "top-left",
+      });
       return;
     } else {
       try {
