@@ -1,20 +1,19 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from "react";
 import profilePic from "../../assets/Rudraveer.png";
-import downArrow from "../../assets/downarrow.svg"
+import downArrow from "../../assets/downarrow.svg";
 import { searchIcon } from "../../assets/magnifying-glass-svgrepo-com.svg";
-import './ChatUsers.css'
-import axios from 'axios';
-import { Box, Button, Text, Tooltip, useToast } from '@chakra-ui/react';
-import { ChatState } from '../Context/ChatProvider';
-import ChatLoading from '../ChatLoading';
+import "./ChatUsers.css";
+import axios from "axios";
+import { Box, Button, Text, Tooltip, useToast } from "@chakra-ui/react";
+import { ChatState } from "../Context/ChatProvider";
+import ChatLoading from "../ChatLoading";
+import UserListItem from "./UserListItem/UserListItem";
 
 const ChatUsers = () => {
-
   const [search, setSearch] = useState("");
   const [searchResult, setSearchResult] = useState([]);
   const [loading, setLoading] = useState(false);
-  const { user } = ChatState();
-  const [chats, setChats] = useState([]);
+  const { user, selectedChat, setSelectedChat, chats, setChats } = ChatState();
   const toast = useToast();
 
   const handleSearch = async () => {
@@ -38,23 +37,49 @@ const ChatUsers = () => {
           },
         };
         const { data } = await axios.get(`/api/user?search=${search}`, config);
-        console.log("Data recieved: ",data);
-        setSearchResult(data);
+        console.log("Data recieved: ", data);
         setLoading(false);
+        setSearchResult(data);
       } catch (error) {
         console.log(error);
-        // toast({
-        //   title: "Error Occured!",
-        //   description: "Failed to Load the chats",
-        //   status: "error",
-        //   duration: 5000,
-        //   isClosable: true,
-        //   position: "bottom-left",
-        // });
+        toast({
+          title: "Error Occured!",
+          description: "Failed to Load the chats",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+          position: "bottom-left",
+        });
       }
     }
   };
-   
+
+  const accessChat = async (userId) => {
+    try {
+      setLoading(true);
+      const config = {
+        headers: {
+          "Content-type": "application/json",
+          Authorization: `Bearer ${user.token}`,
+        },
+      };
+      const { data } = await axios.post(`/api/chat`, { userId }, config);
+      if (!chats.find((c) => c._id === data._id)) setChats([data, ...chats]);
+      setLoading(false);
+      console.log(data);
+      setSelectedChat(data);
+    } catch (error) {
+      toast({
+        title: "Error Occured!",
+        description: "Failed to Load the chats",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom-left",
+      });
+    }
+  };
+
   // const fetchChats = async () => {
   //   const { data } = await axios.get("/api/chat");
   //   setChats(data);
@@ -134,28 +159,34 @@ const ChatUsers = () => {
             {loading ? (
               <ChatLoading />
             ) : (
-              searchResult?.map((user) => (
-                <div className="user1" key={user?._id}>
-                  <div className="userPic">
-                    <img src={profilePic} alt="profilePic" />
-                  </div>
-                  <div className="userContainer">
-                    <div className="userName">
-                      <p>{user?.name}</p>
-                    </div>
-                    <div className="userTyping">
-                      <p>typing...</p>
-                    </div>
-                  </div>
-                  <div className="lastMsgTimeContainer">
-                    <div className="lastMsgTime">
-                      <p>22:30 PM</p>
-                    </div>
-                    <div className="lastMsgTimeEmpty">
-                      <p></p>
-                    </div>
-                  </div>
-                </div>
+                searchResult?.map((user) => (
+                // console.log("user inside search result: ", user),
+                <UserListItem
+                  key={user?._id}
+                  user={user}
+                  onClick={() => accessChat(user?._id)}
+                />
+                // <div className="user1" key={user?._id}>
+                //   <div className="userPic">
+                //     <img src={profilePic} alt="profilePic" />
+                //   </div>
+                //   <div className="userContainer">
+                //     <div className="userName">
+                //       <p>{user?.name}</p>
+                //     </div>
+                //     <div className="userTyping">
+                //       <p>typing...</p>
+                //     </div>
+                //   </div>
+                //   <div className="lastMsgTimeContainer">
+                //     <div className="lastMsgTime">
+                //       <p>22:30 PM</p>
+                //     </div>
+                //     <div className="lastMsgTimeEmpty">
+                //       <p></p>
+                //     </div>
+                //   </div>
+                // </div>
               ))
             )}
             <div className="user1">
@@ -184,6 +215,6 @@ const ChatUsers = () => {
       </div>
     </div>
   );
-}
+};
 
-export default ChatUsers
+export default ChatUsers;
