@@ -13,9 +13,10 @@ const Menubar = () => {
   return (
     <>
       <div className="menuContainer">
-        <div className="logo">
+        {/* <div className="logo">
           <img src={logo} alt="logo" />
-        </div>
+        </div> */}
+      
         <div className="menus">
           <div
             onMouseOver={() => setColor1(afterColor)}

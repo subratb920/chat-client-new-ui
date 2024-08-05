@@ -1,5 +1,6 @@
 import './App.css';
 import { Outlet } from 'react-router-dom';
+import Header from './components-chakra/Header/Header';
 
 function App() {
 
@@ -7,6 +8,7 @@ function App() {
   
   return (
     <div className="App">
+        <Header />
         <Outlet/>
     </div>
   );

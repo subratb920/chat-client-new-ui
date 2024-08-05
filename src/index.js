@@ -6,6 +6,7 @@ import App from './App';
 import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider } from 'react-router-dom';
 import HomePage from './pages/homePage/homePage';
 import ChatPage from './pages/chatPage/chatPage';
+import ChatProvider from './components-chakra/Context/ChatProvider';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 const router = createBrowserRouter(
@@ -17,13 +18,11 @@ const router = createBrowserRouter(
   )
 )
 root.render(
-  <React.StrictMode>
-    <ChakraProvider>
+    <ChatProvider>
       <ChakraProvider>
         <RouterProvider router={router} />
       </ChakraProvider>
-    </ChakraProvider>
-  </React.StrictMode>
+    </ChatProvider>
 );
 
 // If you want to start measuring performance in your app, pass a function
