@@ -105,9 +105,9 @@ const ChatUsers = ({fetchAgain, setFetchAgain}) => {
       };
       const userId = "";
       const { data } = await axios.get("/api/chat", config);
-      // console.log("Data fetched", data);
+      console.log("Data fetched", data);
       setChats(data);
-      // console.log("Chats set", chats);
+      console.log("Chats set", chats);
     } catch (error) {
       toast({
         title: "Error Occured!",
@@ -129,9 +129,9 @@ const ChatUsers = ({fetchAgain, setFetchAgain}) => {
 
   return (
     <div className="userContainer">
-      <div className="chatSectionName">
+      {/* <div className="chatSectionName">
         <p>Chai N-Chat</p>
-      </div>
+      </div> */}
       <div className="avatarSection">
         <div className="avatar">
           <img src={profilePic} alt="profilePic" />

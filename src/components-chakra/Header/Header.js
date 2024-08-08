@@ -44,7 +44,7 @@ const Header = () => {
         display={"flex"}
         justifyContent={"center"}
         alignItems={"center"}
-        border={"1px solid Gray"}
+        // border={"1px solid Gray"}
       >
         <Text>Chai-N-Chat</Text>
       </Box>

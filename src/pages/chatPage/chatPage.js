@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import Menubar from "../../components/Menubar/Menubar";
+import Menubar from "../../components-chakra/Menubar/Menubar";
 import ChatUsers from "../../components-chakra/ChatUsers/ChatUsers";
 import ChatSection from "../../components-chakra/ChatSection/ChatSection";
 import FilesContent from "../../components-chakra/FilesContent/FilesContent";
