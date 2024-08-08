@@ -84,6 +84,7 @@ const ChatUsers = ({fetchAgain, setFetchAgain}) => {
       // console.log(data);
       // setSelectedChat(data);
       setLoadingChat(false);
+      setFetchAgain(!fetchAgain);
     } catch (error) {
       toast({
         title: "Error Occured!",

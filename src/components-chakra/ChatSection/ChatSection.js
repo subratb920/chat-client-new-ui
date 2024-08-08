@@ -2,22 +2,96 @@ import React, { useEffect, useState } from 'react'
 import sendSVG from "../../assets/send.svg"
 import './ChatSection.css'
 import { ChatState } from '../Context/ChatProvider';
-import { Box, Icon, Stack, Text, useToast } from '@chakra-ui/react';
+import { Box, Icon, Spinner, Stack, Text, useToast } from '@chakra-ui/react';
 import ChatLoading from "../ChatLoading";
 import axios from 'axios';
 import { getSender, getSenderFull } from "../../config/ChatLogic";
 import { ArrowBackIcon } from '@chakra-ui/icons';
 import ProfileModal from '../ProfileModal/ProfileModal';
 import UpdateGroupChatModal from '../Modals/UpdateGroupChatModal';
+import ScrollableChat from '../ScrollableChat/ScrollableChat';
 
 const ChatSection = ({fetchAgain, setFetchAgain}) => {
 
   const [loggedUser, setLoggedUser] = useState();
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [newMessage, setNewMessage] = useState();
+
   const { user, selectedChat, setSelectedChat } = ChatState();
   const toast = useToast();
 
+  const fetchMessages = async () => {
+    if (!selectedChat) return;
+    try {
+      setLoading(true);
+      const config = {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      };
+      const { data } = await axios.get(
+        `/api/message/${selectedChat._id}`,
+        config
+      );
+      console.log("Messages: ",data);
+      setMessages(data);
+      setLoading(false);
+    } catch (error) {
+      toast({
+        title: "Error Occured",
+        description: "Failed to Load the Messages",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+    }
+  };
+
+  const sendMessage = async (event) => {
+    if (event.key === "Enter" && newMessage) {
+      try {
+        setLoading(true);
+        const config = {
+          headers: {
+            "Content-type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+        };
+        const { data } = await axios.post(
+          "/api/message",
+          {
+            content: newMessage,
+            chatId: selectedChat?._id,
+          },
+          config
+        );
+        console.log(data);
+        setMessages([...messages, data]);
+        setNewMessage("");
+        setLoading(false);
+      } catch (error) {
+        toast({
+          title: "Error Occured",
+          description: "Failed to Load the Messages",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+          position: "bottom",
+        });
+      }
+    }
+  }
+  const typeHandling = (e) => {
+    setNewMessage(e.target.value);
+
+    // Typing Indicator Logic
+  }
+
   useEffect(() => {
     setLoggedUser(JSON.parse(localStorage.getItem("userInfo")));
+    fetchMessages()
   }, [fetchAgain]);
 
   return (
@@ -39,19 +113,22 @@ const ChatSection = ({fetchAgain, setFetchAgain}) => {
             d={{ base: "flex", md: "none" }}
             icon={<ArrowBackIcon />}
             onClick={() => setSelectedChat("")}
-          />  
+          />
           {selectedChat && !selectedChat?.isGroupChat ? (
-          <>
-            { getSender(user, selectedChat?.users).toUpperCase()}
+            <>
+              {getSender(user, selectedChat?.users).toUpperCase()}
               <ProfileModal user={getSenderFull(user, selectedChat?.users)} />
-          </>
+            </>
           ) : (
             <>
-              { selectedChat?.chatName.toUpperCase() }
-               {< UpdateGroupChatModal
-                 fetchAgain={fetchAgain}
-                 setFetchAgain={setFetchAgain}
-                 />}
+              {selectedChat?.chatName.toUpperCase()}
+              {
+                <UpdateGroupChatModal
+                  fetchAgain={fetchAgain}
+                  setFetchAgain={setFetchAgain}
+                  fetchMessages={fetchMessages}
+                />
+              }
             </>
           )}
         </Text>
@@ -61,12 +138,24 @@ const ChatSection = ({fetchAgain, setFetchAgain}) => {
         </p> */}
       </div>
       <div className="chatSectionContent">
-        <div className="messages">
-          {selectedChat ? (<></>)
-          : (<p> Click on a user to start chatting</p>)}
+        <div className="messageBox">
+          {selectedChat ? (
+            loading ? (
+              <Spinner />
+            ) : (
+              <ScrollableChat messages={messages} />
+            )
+          ) : (
+            <p> Click on a user to start chatting</p>
+          )}
         </div>
-        <div className="inputSection">
-          <input type="text" placeholder="Type a message" />
+        <div className="inputSection" onKeyDown={sendMessage}>
+          <input
+            type="text"
+            placeholder="Type a message"
+            value={newMessage}
+            onChange={typeHandling}
+          />
           <div className="send">
             <img src={sendSVG} alt="send svg" />
           </div>

@@ -22,7 +22,7 @@ import UserBadgeItem from "../UserBadgeItem/UserBadgeItem";
 import axios from "axios";
 import UserListItem from "../ChatUsers/UserListItem/UserListItem";
 
-const UpdateGroupChatModal = ({ fetchAgain, setFetchAgain }) => {
+const UpdateGroupChatModal = ({ fetchAgain, setFetchAgain, fetchMessages   }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [groupChatName, setGroupChatName] = useState("");
   const [search, setSearch] = useState();
@@ -60,9 +60,10 @@ const UpdateGroupChatModal = ({ fetchAgain, setFetchAgain }) => {
         },
         config
       );
-        console.log("Exit Group data: ", data);
-        setSelectedChat(data);
-    //   user1._id === user._id ? selectedChat({}) : setSelectedChat(data);
+      console.log("Exit Group data: ", data);
+      setSelectedChat(data);
+      //   user1._id === user._id ? selectedChat({}) : setSelectedChat(data);
+      fetchMessages();
       setFetchAgain(!fetchAgain);
       setLoading(false);
     } catch (error) {
@@ -238,7 +239,7 @@ const UpdateGroupChatModal = ({ fetchAgain, setFetchAgain }) => {
                 <UserBadgeItem
                   key={u._id}
                   user={u}
-                    handleFunction={() => handleRemove(u)}
+                  handleFunction={() => handleRemove(u)}
                 />
               ))}
             </Box>
@@ -282,9 +283,7 @@ const UpdateGroupChatModal = ({ fetchAgain, setFetchAgain }) => {
           </ModalBody>
 
           <ModalFooter>
-            <Button colorScheme="red" mr={3} 
-            onClick={() => handleRemove(user)}
-            >
+            <Button colorScheme="red" mr={3} onClick={() => handleRemove(user)}>
               Leave Group
             </Button>
           </ModalFooter>
