@@ -17,7 +17,7 @@ import { BellIcon, ChevronDownIcon } from "@chakra-ui/icons";
 
 const Header = () => {
   const { user } = ChatState();
-  console.log(user?.name);
+  // console.log(user?.name);
 
   const logoutHandler = () => {
 

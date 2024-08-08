@@ -110,7 +110,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-}
+}   
 
 .searchSection {
     width: 100%;
@@ -145,6 +145,10 @@
     margin-bottom: 5px;
     /* border: 1px solid rgb(209, 209, 209); */
     border-radius: 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center
 }
 
 .lastChatSection p {
@@ -165,7 +169,7 @@
 
 .users {
     width: 100%;
-    height: auto;
+    height: 100%;
     margin-bottom: 5px;
     /* border: 1px solid rgb(209, 209, 209); */
     border-radius: 5px;

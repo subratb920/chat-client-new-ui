@@ -124,21 +124,21 @@ const Signup = () => {
 
   return (
     <VStack spacing={"5px"} color={"black"}>
-      <FormControl id="first-name">
+      <FormControl id="first-nameS">
         <FormLabel>Name</FormLabel>
         <Input
           placeholder="Enter Your Name"
           onChange={(e) => setName(e.target.value)}
         ></Input>
       </FormControl>
-      <FormControl id="email">
+      <FormControl id="emailS">
         <FormLabel>Email</FormLabel>
         <Input
           placeholder="Enter Your Email"
           onChange={(e) => setEmail(e.target.value)}
         ></Input>
       </FormControl>
-      <FormControl id="password">
+      <FormControl id="passwordS">
         <FormLabel>Password</FormLabel>
         <InputGroup>
           <Input
@@ -152,6 +152,8 @@ const Signup = () => {
             </Button>
           </InputRightElement>
         </InputGroup>
+        </FormControl>
+      <FormControl id="confirmPassword">
         <FormLabel>Confirm Password</FormLabel>
         <InputGroup>
           <Input

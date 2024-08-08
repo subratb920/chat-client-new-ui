@@ -1,10 +1,27 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import profilePic from "../../../assets/Rudraveer.png";
 import "./UserListItem.css";
+import { ChatState } from '../../Context/ChatProvider';
+import { getSender } from '../../../config/ChatLogic';
 
-const UserListItem = ({user, accessChat}) => {
+const UserListItem = ({ user, handleFunction }) => {
+
+  const [loggedUser, setLoggedUser] = useState();
+  const { selectedChat } = ChatState();
+  console.log("user: ", user);
+  console.log("selectedChat: ", selectedChat);
+  
+  useEffect(() => {
+    setLoggedUser(JSON.parse(localStorage.getItem("userInfo")));
+    console.log("loggedUser: ", loggedUser);
+  }, []);
+  
+
   return (
-    <div className="user1">
+    <div
+      className="user1"
+      onClick={handleFunction}
+    >
       {console.log("user inside userListItem: ", user)}
       <div className="userPic">
         <img src={profilePic} alt="profilePic" />
@@ -27,6 +44,6 @@ const UserListItem = ({user, accessChat}) => {
       </div>
     </div>
   );
-}
+};
 
 export default UserListItem

@@ -5,10 +5,10 @@ import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
 
-    const [name, setName] = useState();
-    const [email, setEmail] = useState();
+    const [name, setName] = useState("");
+    const [email, setEmail] = useState("");
     const [ShowP, setShowP] = useState(false);
-    const [password, setPassword] = useState();
+    const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const toast = useToast();
     const navigate = useNavigate();
@@ -64,7 +64,7 @@ const Login = () => {
 
   return (
     <VStack spacing={"5px"} color={"black"}>
-      <FormControl id="first-name">
+      <FormControl id="first-nameL">
         <FormLabel>Name</FormLabel>
         <Input
           placeholder="Enter Your Name"
@@ -72,7 +72,7 @@ const Login = () => {
           onChange={(e) => setName(e.target.value)}
         ></Input>
       </FormControl>
-      <FormControl id="email">
+      <FormControl id="emailL">
         <FormLabel>Email</FormLabel>
         <Input
           placeholder="Enter Your Email"
@@ -80,7 +80,7 @@ const Login = () => {
           onChange={(e) => setEmail(e.target.value)}
         ></Input>
       </FormControl>
-      <FormControl id="password">
+      <FormControl id="passwordL">
         <FormLabel>Password</FormLabel>
         <InputGroup>
           <Input

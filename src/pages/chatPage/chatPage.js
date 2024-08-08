@@ -1,14 +1,22 @@
-import React, { useEffect } from 'react'
-import Menubar from '../../components/Menubar/Menubar';
-import ChatUsers from '../../components-chakra/ChatUsers/ChatUsers';
-import ChatSection from '../../components-chakra/ChatSection/ChatSection';
-import FilesContent from '../../components-chakra/FilesContent/FilesContent';
-import './chatPage.css'
-import { useNavigate } from 'react-router';
+import React, { useEffect, useState } from "react";
+import Menubar from "../../components/Menubar/Menubar";
+import ChatUsers from "../../components-chakra/ChatUsers/ChatUsers";
+import ChatSection from "../../components-chakra/ChatSection/ChatSection";
+import FilesContent from "../../components-chakra/FilesContent/FilesContent";
+import "./chatPage.css";
+import { useNavigate } from "react-router";
+import { ChatState } from "../../components-chakra/Context/ChatProvider";
 
 const ChatPage = () => {
-
+  const [ fetchAgain, setFetchAgain ] = useState(false);
+  const { user } = ChatState();
   const navigate = useNavigate();
+
+  // console.log(user);
+
+  // if (!user) {
+  //   navigate("/");
+  // }
 
   useEffect(() => {
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
@@ -18,13 +26,23 @@ const ChatPage = () => {
   }, [navigate]);
 
   return (
-    <div className='chatPage'>
+    <div className="chatPage">
       <Menubar></Menubar>
-      <ChatUsers></ChatUsers>
-      <ChatSection></ChatSection>
+      {user && (
+        <ChatUsers
+          fetchAgain={fetchAgain}
+          setFetchAgain={setFetchAgain}
+        ></ChatUsers>
+      )}
+      {user && (
+        <ChatSection
+          fetchAgain={fetchAgain}
+          setFetchAgain={setFetchAgain}
+        ></ChatSection>
+      )}
       <FilesContent></FilesContent>
     </div>
   );
-}
+};
 
 export default ChatPage;
