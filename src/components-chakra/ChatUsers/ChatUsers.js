@@ -196,7 +196,7 @@ const ChatUsers = ({fetchAgain, setFetchAgain}) => {
         </div>
         <div className="userListSection">
           <div className="users">
-            {chats ? (
+            {chats.length !==0 ? (
               <Stack overflowY={"scroll"}>
                 {chats?.map((chat) => (
                   <Box
