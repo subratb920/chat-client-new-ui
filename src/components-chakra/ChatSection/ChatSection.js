@@ -36,7 +36,7 @@ const ChatSection = ({fetchAgain, setFetchAgain}) => {
     },
   };
 
-  const { user, selectedChat, setSelectedChat } = ChatState();
+  const { user, selectedChat, setSelectedChat, notification, setNotification } = ChatState();
   const toast = useToast();
 
   const fetchMessages = async () => {
@@ -136,6 +136,7 @@ const ChatSection = ({fetchAgain, setFetchAgain}) => {
     socket.on("stop-typing", () => setIsTyping(false));
   }, []);
 
+  // console.log("notification recieved------", notification);
   useEffect(() => {
     setLoggedUser(JSON.parse(localStorage.getItem("userInfo")));
     fetchMessages()
@@ -148,10 +149,16 @@ const ChatSection = ({fetchAgain, setFetchAgain}) => {
       if(
         !selectedChatCompare || // if chat is not selected or doesn't match current chat
         selectedChatCompare?._id !== newMessageRecieved?.chat?._id) {
-         // Give notification
-        } else {
-          setMessages([...messages, newMessageRecieved]);
+        
+        // Give notification
+        if (!notification.includes(newMessageRecieved)) {  
+          setNotification([newMessageRecieved, ...notification]);
+          setFetchAgain(!fetchAgain);
         }
+
+      } else {
+        setMessages([...messages, newMessageRecieved]);
+      }
       setSocketConnected(true);
       console.log("connected");
     });

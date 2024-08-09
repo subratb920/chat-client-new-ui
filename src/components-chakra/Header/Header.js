@@ -14,9 +14,10 @@ import "./Header.css";
 import ProfileModal from "../ProfileModal/ProfileModal";
 import { ChatState } from "../Context/ChatProvider";
 import { BellIcon, ChevronDownIcon } from "@chakra-ui/icons";
+import { getSender } from "../../config/ChatLogic";
 
 const Header = () => {
-  const { user } = ChatState();
+  const { user, selectedChat, setSelectedChat, notification, setNotification } = ChatState();
   // console.log(user?.name);
 
   const logoutHandler = () => {
@@ -60,10 +61,19 @@ const Header = () => {
           <MenuButton p={1}>
             <BellIcon fontSize={"2xl"} m={1} />
           </MenuButton>
-          <MenuList>
-            <MenuItem onClick={logoutHandler}>Notification 1</MenuItem>
-            <MenuItem>Notification 2</MenuItem>
-            <MenuItem>Notification 3</MenuItem>
+          <MenuList pl={2}>
+            {!notification.length && "no new messages"}
+            {notification.map((notif) => (
+              <MenuItem key={notif._id} onClick={() => {
+                setSelectedChat(notif.chat)
+                setNotification(notification.filter((n) => n !== notif))
+              }}>
+                {notif.chat.isGroupChat
+                  ? `New Message in ${notif.chat.chatName}`
+                  : `New Message from ${getSender(user, notif.chat.users)}`}
+                {notif.message}
+              </MenuItem>
+            ))}
           </MenuList>
         </Menu>
         <Menu>
@@ -75,13 +85,13 @@ const Header = () => {
               src="https://cdn-icons-png.flaticon.com/512/147/147144.png"
             />
           </MenuButton>
-            <MenuList>
-              <ProfileModal user={user}>
-                <MenuItem>My Profile</MenuItem>
-              </ProfileModal>
-              <MenuDivider />
-              <MenuItem onClick={logoutHandler}>Log Out</MenuItem>
-            </MenuList>
+          <MenuList>
+            <ProfileModal user={user}>
+              <MenuItem>My Profile</MenuItem>
+            </ProfileModal>
+            <MenuDivider />
+            <MenuItem onClick={logoutHandler}>Log Out</MenuItem>
+          </MenuList>
         </Menu>
       </Box>
     </div>
