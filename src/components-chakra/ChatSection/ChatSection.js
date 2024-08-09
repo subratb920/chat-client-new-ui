@@ -11,6 +11,8 @@ import ProfileModal from '../ProfileModal/ProfileModal';
 import UpdateGroupChatModal from '../Modals/UpdateGroupChatModal';
 import ScrollableChat from '../ScrollableChat/ScrollableChat';
 import io from "socket.io-client";
+import Lottie from "react-lottie";
+import animationData from "../animations/Animation - 1723167029798.json";
 
 const ENDPOINT = "http://localhost:8080";
 var socket, selectedChatCompare;
@@ -22,6 +24,17 @@ const ChatSection = ({fetchAgain, setFetchAgain}) => {
   const [loading, setLoading] = useState(false);
   const [newMessage, setNewMessage] = useState();
   const [socketConnected, setSocketConnected] = useState(false);
+  const [typing, setTyping] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+
+  const defaultOptions = {
+    loop: true,
+    autoplay: true,
+    animationData: animationData,
+    rendererSettings: {
+      preserveAspectRatio: "xMidYMid slice",
+    },
+  };
 
   const { user, selectedChat, setSelectedChat } = ChatState();
   const toast = useToast();
@@ -91,10 +104,26 @@ const ChatSection = ({fetchAgain, setFetchAgain}) => {
       }
     }
   }
-  const typeHandling = (e) => {
+  const typingHandler = (e) => {
     setNewMessage(e.target.value);
 
     // Typing Indicator Logic
+    if (!socketConnected) return;
+
+    if (!typing) {
+      setTyping(true);
+      socket.emit("typing", selectedChat._id);
+    }
+    let lastTypingTime = new Date().getTime();
+    var timerLength = 3000;
+    setTimeout(() => {
+      var timeNow = new Date().getTime();
+      var timeDiff = timeNow - lastTypingTime;
+      if (timeDiff >= timerLength && typing) {
+        socket.emit("stop-typing", selectedChat._id);
+        setTyping(false);
+      }
+    }, timerLength);  
   }
 
   useEffect(() => {
@@ -102,8 +131,9 @@ const ChatSection = ({fetchAgain, setFetchAgain}) => {
     socket.emit("setup", user);
     socket.on("connected", () => {
       setSocketConnected(true);
-      console.log("connected");
     });
+    socket.on("typing", () => setIsTyping(true));
+    socket.on("stop-typing", () => setIsTyping(false));
   }, []);
 
   useEffect(() => {
@@ -181,13 +211,20 @@ const ChatSection = ({fetchAgain, setFetchAgain}) => {
           ) : (
             <p> Click on a user to start chatting</p>
           )}
+          {isTyping ? <div>
+            <Lottie
+              options={defaultOptions}
+              width={70}
+              style={{ marginBottom: 15, marginLeft: 0 }}
+            />
+          </div> : <></>}
         </div>
         <div className="inputSection" onKeyDown={sendMessage}>
           <input
             type="text"
             placeholder="Type a message"
             value={newMessage}
-            onChange={typeHandling}
+            onChange={typingHandler}
           />
           <div className="send">
             <img src={sendSVG} alt="send svg" />
