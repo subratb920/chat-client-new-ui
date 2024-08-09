@@ -10,6 +10,10 @@ import { ArrowBackIcon } from '@chakra-ui/icons';
 import ProfileModal from '../ProfileModal/ProfileModal';
 import UpdateGroupChatModal from '../Modals/UpdateGroupChatModal';
 import ScrollableChat from '../ScrollableChat/ScrollableChat';
+import io from "socket.io-client";
+
+const ENDPOINT = "http://localhost:8080";
+var socket, selectedChatCompare;
 
 const ChatSection = ({fetchAgain, setFetchAgain}) => {
 
@@ -17,6 +21,7 @@ const ChatSection = ({fetchAgain, setFetchAgain}) => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [newMessage, setNewMessage] = useState();
+  const [socketConnected, setSocketConnected] = useState(false);
 
   const { user, selectedChat, setSelectedChat } = ChatState();
   const toast = useToast();
@@ -37,6 +42,8 @@ const ChatSection = ({fetchAgain, setFetchAgain}) => {
       console.log("Messages: ",data);
       setMessages(data);
       setLoading(false);
+
+      socket.emit("join-chat", selectedChat._id);
     } catch (error) {
       toast({
         title: "Error Occured",
@@ -71,6 +78,7 @@ const ChatSection = ({fetchAgain, setFetchAgain}) => {
         setMessages([...messages, data]);
         setNewMessage("");
         setLoading(false);
+        socket.emit("new-message", data);
       } catch (error) {
         toast({
           title: "Error Occured",
@@ -90,9 +98,34 @@ const ChatSection = ({fetchAgain, setFetchAgain}) => {
   }
 
   useEffect(() => {
+    socket = io(ENDPOINT);
+    socket.emit("setup", user);
+    socket.on("connected", () => {
+      setSocketConnected(true);
+      console.log("connected");
+    });
+  }, []);
+
+  useEffect(() => {
     setLoggedUser(JSON.parse(localStorage.getItem("userInfo")));
     fetchMessages()
+
+    selectedChatCompare = selectedChat;
   }, [fetchAgain]);
+
+  useEffect(() => {
+    socket.on("message-receive", (newMessageRecieved) => {
+      if(
+        !selectedChatCompare || // if chat is not selected or doesn't match current chat
+        selectedChatCompare?._id !== newMessageRecieved?.chat?._id) {
+         // Give notification
+        } else {
+          setMessages([...messages, newMessageRecieved]);
+        }
+      setSocketConnected(true);
+      console.log("connected");
+    });
+  });
 
   return (
     <div className="chatContainer">
