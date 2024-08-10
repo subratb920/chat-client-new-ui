@@ -2,6 +2,8 @@ import { Button, FormControl, FormLabel, Input, InputGroup, InputRightElement, V
 import axios from 'axios';
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
+import imageCompression from "browser-image-compression";
+import CryptoJS from "crypto-js";
 
 const Signup = () => {
   const [name, setName] = useState();
@@ -12,11 +14,13 @@ const Signup = () => {
   const [ShowCP, setShowCP] = useState(false);
   const [pic, setPic] = useState();
   const [loading, setLoading] = useState(false);
+
   const toast = useToast();
   const navigate = useNavigate();
 
-  const postDetails = (pics) => {
+  const postDetails = async (pics) => {
     setLoading(true);
+
     if (pics === undefined) {
       toast({
         title: "Please Select an Image",
@@ -28,26 +32,72 @@ const Signup = () => {
     }
 
     if (pics.type === "image/jpeg" || pics.type === "image/png") {
-      const data = new FormData();
-      data.append("file", pics);
-      data.append("upload_preset", "chai-n-chat");
-      data.append("cloud_name", "da6sg9zqh");
-      fetch("https://api.cloudinary.com/v1_1/drh3h1jx6/image/upload", {
-        method: "post",
-        body: data, 
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          setPic(data.url.toString());
-          console.log(data.url.toString());
-          setLoading(false);
-        })
-        .catch((err) => {
-          console.log(err);
-          setLoading(false);
+      
+      // Compression options
+      const options = {
+        maxSizeMB: 1, // Maximum size in MB
+        maxWidthOrHeight: 1920, // Max width or height in pixels
+        useWebWorker: true, // Use multi-threading for better performance
+      };
+
+      const formData = new FormData();
+      // formData.append("image", pics);
+      try {
+        const compressedFile = await imageCompression(pics, options);
+        console.log("Original File Size:", (pics.size / 1024).toFixed(2), "KB");
+        console.log(
+          "Compressed File Size:",
+          (compressedFile.size / 1024).toFixed(2),
+          "KB"
+        );
+
+        // Read the compressed file as ArrayBuffer
+        const arrayBuffer = await compressedFile.arrayBuffer();
+
+        // Convert ArrayBuffer to WordArray (required by CryptoJS)
+        const wordArray = CryptoJS.lib.WordArray.create(arrayBuffer);
+
+        // Define your encryption key (ensure it's stored securely)
+        const encryptionKey = "your-encryption-secret-key"; // Replace with a secure key
+
+        // Encrypt the WordArray using AES
+        const encrypted = CryptoJS.AES.encrypt(
+          wordArray,
+          encryptionKey
+        ).toString();
+
+        // Create a Blob from the encrypted data
+        const encryptedBlob = new Blob([encrypted], { type: pics.type });
+
+        formData.append("image", encryptedBlob, compressedFile.name);
+        // formData.append("fileName", compressedFile.name);
+
+        // Log the FormData contents
+        for (const [key, value] of formData.entries()) {
+          console.log(`${key}:`, value);
+        }
+
+        const config = {
+          headers: {
+            "Content-type": "multipart/form-data",
+          },
+        };
+
+        // Log the axios request config
+        console.log("Axios Request Config:", {
+          url: "http://localhost:5000/api/image-url",
+          method: "post",
+          data: formData,
+          ...config,
         });
-    console.log(pics);
-  } else {
+        
+        const { data } = await axios.post("/api/image-url/", formData, config);
+        console.log("Image uploaded succesfully: ", data.imageUrl);
+        setPic(data.imageUrl);
+      } catch (error) {
+        console.log(error);
+      }
+    } else {
     toast({
       title: "Please Select an Image",
       status: "warning",

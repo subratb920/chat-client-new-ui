@@ -1,6 +1,7 @@
 export const getSender = (user, users) => {
+  console.log("user: ", user, "users: ", users);
     // console.log("getSender called. Returning: ", users[0]._id === user._id ? users[1].name : users[0].name);
-    return users[0]._id === user._id ? users[1].name : users[0].name;
+    return users[0]._id === user._id ? users[1]?.name : users[0]?.name;
 };
 
 export const getSenderId = (loggedUser, users) => {

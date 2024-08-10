@@ -12,6 +12,8 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.7.2",
+    "browser-image-compression": "^2.0.2",
+    "crypto-js": "^4.2.0",
     "framer-motion": "^11.3.19",
     "live-server": "^1.2.2",
     "react": "^18.3.1",
