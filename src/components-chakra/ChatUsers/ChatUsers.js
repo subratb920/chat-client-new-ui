@@ -19,8 +19,10 @@ import {
 import { ChatState } from "../Context/ChatProvider";
 import ChatLoading from "../ChatLoading";
 import UserListItem from "./UserListItem/UserListItem";
-import { getSender, getSenderId } from "../../config/ChatLogic";
+import { getReciever, getRecieverPic, getSender, getSenderId } from "../../config/ChatLogic";
 import GroupChatModal from "./GroupChatModal/GroupChatModal";
+import CryptoJS from "crypto-js";
+import imageCompression from "browser-image-compression";
 
 const ChatUsers = ({fetchAgain, setFetchAgain}) => {
   const [loggedUser, setLoggedUser] = useState();
@@ -81,10 +83,11 @@ const ChatUsers = ({fetchAgain, setFetchAgain}) => {
       };
       const { data } = await axios.post(`/api/chat`, { userId }, config);
       if (!chats.find((c) => c._id === data._id)) setChats([data, ...chats]);
-      // console.log(data);
-      // setSelectedChat(data);
+      // console.log("CHat data for selected user: ", data);
+      setSelectedChat(data);
       setLoadingChat(false);
       setFetchAgain(!fetchAgain);
+      // console.log("Printing reciever pic: ", getReciever(loggedUser, selectedChat.users).pic);
     } catch (error) {
       toast({
         title: "Error Occured!",
@@ -106,9 +109,9 @@ const ChatUsers = ({fetchAgain, setFetchAgain}) => {
       };
       const userId = "";
       const { data } = await axios.get("/api/chat", config);
-      console.log("Data fetched", data);
+      // console.log("Data fetched", data);
       setChats(data);
-      console.log("Chats set", chats);
+      // console.log("Chats set", chats);
     } catch (error) {
       toast({
         title: "Error Occured!",
@@ -120,6 +123,83 @@ const ChatUsers = ({fetchAgain, setFetchAgain}) => {
       });
     }
   };
+
+  // const decryptImage = async (imageUrl) => {
+
+  //   console.log("Encrypted image: ", imageUrl);
+
+  //   if (imageUrl.includes("amazonaws.com")) {
+  //     // Check if data is a Blob
+  //     if (imageUrl instanceof Blob) {
+  //       console.log("Received Blob");
+  //     } else if (imageUrl instanceof ArrayBuffer) {
+  //       console.log("Received ArrayBuffer");
+  //     } else if (typeof imageUrl === "string") {
+  //       console.log("Received String");
+  //     } else {
+  //       console.log("Received Unknown Type");
+  //     }
+
+  //     // const binaryString = atob(imageUrl);
+  //     const arrayBuffer = new ArrayBuffer(imageUrl);
+  //     const uint8Array = new Uint8Array(arrayBuffer);
+  //     for (let i = 0; i < arrayBuffer.length; i++) {
+  //       uint8Array[i] = arrayBuffer.charCodeAt(i);
+  //     }
+  //     // Step 3: Decrypt the Uint8Array
+  //     const wordArray = CryptoJS.lib.WordArray.create(uint8Array);
+  //     const decryptedBytes = CryptoJS.AES.decrypt(wordArray, secretKey);
+
+  //     // Convert decrypted bytes to Uint8Array
+  //     const decryptedArray = new Uint8Array(decryptedBytes.sigBytes);
+  //     for (let i = 0; i < decryptedBytes.sigBytes; i++) {
+  //       decryptedArray[i] =
+  //         (decryptedBytes.words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
+  //     }
+
+  //     // Step 4: Decompress the Uint8Array
+  //     const decompressedArray = pako.inflate(decryptedArray);
+
+  //     // Convert decompressed data to Base64 string
+  //     const base64String = `data:image/jpeg;base64,${btoa(
+  //       String.fromCharCode.apply(null, decompressedArray)
+  //     )}`;
+
+  //     // 2nd attempt
+  //     // const decryptedBytes = CryptoJS.AES.decrypt(
+  //     //   bytes,
+  //     //   "your-encryption-secret-key"
+  //     // );
+  //     // const decryptedArrayBuffer = new Uint8Array(
+  //     //   decryptedBytes.words.map((word) => word >>> 24)
+  //     // );
+  //     // const decryptedBlob = new Blob([decryptedArrayBuffer], {
+  //     //   type: "image/jpeg",
+  //     // });
+  //     // const decompressedBlob = await imageCompression(decryptedBlob, {
+  //     //   // maxSizeMB: 1, // Adjust as needed
+  //     //   useWebWorker: true,
+  //     // });
+  //     // const decImageUrl = URL.createObjectURL(decompressedBlob);
+
+  //     // 1st attemp
+  //     // const bytes = CryptoJS.AES.decrypt(
+  //     //   imageUrl,
+  //     //   "your-encryption-secret-key"
+  //     // );
+  //     // const wordArray = CryptoJS.enc.Base64.parse(
+  //     //   CryptoJS.enc.Base64.stringify(bytes)
+  //     // );
+  //     // const base64Image = `data:image/jpeg;base64,${CryptoJS.enc.Base64.stringify(
+  //     //   wordArray
+  //     // )}`;
+  //     console.log("Decrypted image: ", base64String);
+  //     return base64String;
+  //   } else {
+  //     console.log("Image is already decrypted");
+  //     return imageUrl;
+  //   }
+  // }
 
   useEffect(() => {
     fetchChats();
@@ -135,7 +215,18 @@ const ChatUsers = ({fetchAgain, setFetchAgain}) => {
       </div> */}
       <div className="avatarSection">
         <div className="avatar">
-          <img src={profilePic} alt="profilePic" />
+          {selectedChat ? (
+            <img
+              src={
+                selectedChat.isGroupChat
+                  ? profilePic
+                  : getRecieverPic(loggedUser, selectedChat.users)
+              }
+              alt="profilePic"
+            />
+          ) : (
+            <img src={profilePic} alt="profilePic" />
+          )}
         </div>
         <div className="userName">
           <p>
@@ -197,13 +288,12 @@ const ChatUsers = ({fetchAgain, setFetchAgain}) => {
         </div>
         <div className="userListSection">
           <div className="users">
-            {chats.length !==0 ? (
+            {chats.length !== 0 ? (
               <Stack overflowY={"scroll"}>
                 {chats?.map((chat) => (
                   <Box
                     className="user1"
                     onClick={() => {
-                      setSelectedChat(chat);
                       accessChat(getSenderId(user, chat.users));
                     }}
                     cursor={"pointer"}
@@ -218,7 +308,18 @@ const ChatUsers = ({fetchAgain, setFetchAgain}) => {
                     key={chat._id}
                   >
                     <div className="userPic">
-                      <img src={profilePic} alt="profilePic" />
+                      {chat ? (
+                        <img
+                          src={
+                            chat.isGroupChat
+                              ? profilePic
+                              : getRecieverPic(loggedUser, chat.users)
+                          }
+                          alt="profilePic"
+                        />
+                      ) : (
+                        <img src={profilePic} alt="profilePic" />
+                      )}
                     </div>
                     <div className="userContainer">
                       <div className="userName">

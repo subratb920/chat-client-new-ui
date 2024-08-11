@@ -8,12 +8,12 @@ const UserListItem = ({ user, handleFunction }) => {
 
   const [loggedUser, setLoggedUser] = useState();
   const { selectedChat } = ChatState();
-  console.log("user: ", user);
-  console.log("selectedChat: ", selectedChat);
+  // console.log("user: ", user);
+  // console.log("selectedChat: ", selectedChat);
   
   useEffect(() => {
     setLoggedUser(JSON.parse(localStorage.getItem("userInfo")));
-    console.log("loggedUser: ", loggedUser);
+    // console.log("loggedUser: ", loggedUser);
   }, []);
   
 
@@ -22,7 +22,7 @@ const UserListItem = ({ user, handleFunction }) => {
       className="user1"
       onClick={handleFunction}
     >
-      {console.log("user inside userListItem: ", user)}
+      {/* {console.log("user inside userListItem: ", user)} */}
       <div className="userPic">
         <img src={profilePic} alt="profilePic" />
       </div>

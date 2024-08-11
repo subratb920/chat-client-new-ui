@@ -33,7 +33,7 @@ const UpdateGroupChatModal = ({ fetchAgain, setFetchAgain, fetchMessages   }) =>
   const toast = useToast();
 
   const handleRemove = async (user1) => {
-    console.log("Handle remove called...");
+    // console.log("Handle remove called...");
     if (selectedChat?.groupAdmin._id !== user._id && user1._id !== user._id) {
       toast({
         title: "Only admins can add/remove members!",
@@ -60,7 +60,7 @@ const UpdateGroupChatModal = ({ fetchAgain, setFetchAgain, fetchMessages   }) =>
         },
         config
       );
-      console.log("Exit Group data: ", data);
+      // console.log("Exit Group data: ", data);
       setSelectedChat(data);
       //   user1._id === user._id ? selectedChat({}) : setSelectedChat(data);
       fetchMessages();
@@ -109,7 +109,7 @@ const UpdateGroupChatModal = ({ fetchAgain, setFetchAgain, fetchMessages   }) =>
           },
           config
         );
-        console.log(data?._id);
+        // console.log(data?._id);
         setSelectedChat(data);
         setFetchAgain(!fetchAgain);
         setRenameLoading(false);
@@ -148,7 +148,7 @@ const UpdateGroupChatModal = ({ fetchAgain, setFetchAgain, fetchMessages   }) =>
         },
       };
       const { data } = await axios.get(`/api/user?search=${search}`, config);
-      console.log(data);
+      // console.log(data);
       setLoading(false);
       setSearchResult(data);
     } catch (error) {

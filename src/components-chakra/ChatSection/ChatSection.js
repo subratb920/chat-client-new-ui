@@ -52,7 +52,7 @@ const ChatSection = ({fetchAgain, setFetchAgain}) => {
         `/api/message/${selectedChat._id}`,
         config
       );
-      console.log("Messages: ",data);
+      // console.log("Messages: ",data);
       setMessages(data);
       setLoading(false);
 
@@ -87,7 +87,7 @@ const ChatSection = ({fetchAgain, setFetchAgain}) => {
           },
           config
         );
-        console.log(data);
+        // console.log(data);
         setMessages([...messages, data]);
         setNewMessage("");
         setLoading(false);

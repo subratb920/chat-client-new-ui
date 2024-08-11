@@ -34,48 +34,48 @@ const Signup = () => {
     if (pics.type === "image/jpeg" || pics.type === "image/png") {
       
       // Compression options
-      const options = {
-        maxSizeMB: 1, // Maximum size in MB
-        maxWidthOrHeight: 1920, // Max width or height in pixels
-        useWebWorker: true, // Use multi-threading for better performance
-      };
+      // const options = {
+      //   maxSizeMB: 1, // Maximum size in MB
+      //   maxWidthOrHeight: 1920, // Max width or height in pixels
+      //   useWebWorker: true, // Use multi-threading for better performance
+      // };
 
       const formData = new FormData();
       // formData.append("image", pics);
       try {
-        const compressedFile = await imageCompression(pics, options);
-        console.log("Original File Size:", (pics.size / 1024).toFixed(2), "KB");
-        console.log(
-          "Compressed File Size:",
-          (compressedFile.size / 1024).toFixed(2),
-          "KB"
-        );
+      //   const compressedFile = await imageCompression(pics, options);
+      //   console.log("Original File Size:", (pics.size / 1024).toFixed(2), "KB");
+      //   console.log(
+      //     "Compressed File Size:",
+      //     (compressedFile.size / 1024).toFixed(2),
+      //     "KB"
+      //   );
 
         // Read the compressed file as ArrayBuffer
-        const arrayBuffer = await compressedFile.arrayBuffer();
+        // const arrayBuffer = await compressedFile.arrayBuffer();
 
         // Convert ArrayBuffer to WordArray (required by CryptoJS)
-        const wordArray = CryptoJS.lib.WordArray.create(arrayBuffer);
+        // const wordArray = CryptoJS.lib.WordArray.create(arrayBuffer);
 
         // Define your encryption key (ensure it's stored securely)
-        const encryptionKey = "your-encryption-secret-key"; // Replace with a secure key
+        // const encryptionKey = "your-encryption-secret-key"; // Replace with a secure key
 
         // Encrypt the WordArray using AES
-        const encrypted = CryptoJS.AES.encrypt(
-          wordArray,
-          encryptionKey
-        ).toString();
+        // const encrypted = CryptoJS.AES.encrypt(
+        //   wordArray,
+        //   encryptionKey
+        // ).toString();
 
         // Create a Blob from the encrypted data
-        const encryptedBlob = new Blob([encrypted], { type: pics.type });
+        // const encryptedBlob = new Blob([encrypted], { type: pics.type });
 
-        formData.append("image", encryptedBlob, compressedFile.name);
-        // formData.append("fileName", compressedFile.name);
+        // formData.append("image", encryptedBlob, compressedFile.name);
+        formData.append("image",pics, pics.name);
 
         // Log the FormData contents
-        for (const [key, value] of formData.entries()) {
-          console.log(`${key}:`, value);
-        }
+        // for (const [key, value] of formData.entries()) {
+        //   console.log(`${key}:`, value);
+        // }
 
         const config = {
           headers: {
