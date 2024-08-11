@@ -3,13 +3,17 @@ import { Box, Container, Tab, TabList, TabPanel, TabPanels, Tabs, Text } from '@
 import Signup from '../../components-chakra/Authenticaltion/Signup';
 import Login from '../../components-chakra/Authenticaltion/login';
 import { useNavigate } from 'react-router-dom';
+import { ChatState } from '../../components-chakra/Context/ChatProvider';
 
 const HomePage = () => {
 
   const navigate = useNavigate();
 
+  const { user, fetchAgain, setFetchAgain } = ChatState();
+
   useEffect(() => {
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+    setFetchAgain(!fetchAgain);
     if (userInfo) {
       navigate("/chats");
     }

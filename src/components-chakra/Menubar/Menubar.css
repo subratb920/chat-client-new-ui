@@ -45,7 +45,9 @@
         border-radius: 10px;
         display: flex;
         flex-direction: column;
+        justify-content: center;
         align-items: center;
+        cursor: pointer;
     }
 
     .file2 {
@@ -58,7 +60,9 @@
         border-radius: 10px;
         display: flex;
         flex-direction: column;
+        justify-content: center;
         align-items: center;
+        cursor: pointer;
     }
 
     .file3 {
@@ -71,7 +75,9 @@
         border-radius: 10px;
         display: flex;
         flex-direction: column;
+        justify-content: center;
         align-items: center;
+        cursor: pointer;
     }
 
     .file4 {
@@ -84,6 +90,8 @@
         border-radius: 10px;
         display: flex;
         flex-direction: column;
+        justify-content: center;
         align-items: center;
+        cursor: pointer;
     }
 }

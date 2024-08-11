@@ -17,7 +17,7 @@ import animationData from "../animations/Animation - 1723167029798.json";
 const ENDPOINT = "http://localhost:8080";
 var socket, selectedChatCompare;
 
-const ChatSection = ({fetchAgain, setFetchAgain}) => {
+const ChatSection = () => {
 
   const [loggedUser, setLoggedUser] = useState();
   const [messages, setMessages] = useState([]);
@@ -36,7 +36,7 @@ const ChatSection = ({fetchAgain, setFetchAgain}) => {
     },
   };
 
-  const { user, selectedChat, setSelectedChat, notification, setNotification } = ChatState();
+  const { user, selectedChat, setSelectedChat, notification, setNotification, fetchAgain, setFetchAgain } = ChatState();
   const toast = useToast();
 
   const fetchMessages = async () => {

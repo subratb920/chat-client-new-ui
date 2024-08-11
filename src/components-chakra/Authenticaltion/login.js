@@ -2,6 +2,7 @@ import { Button, FormControl, FormLabel, Input, InputGroup, InputRightElement, V
 import axios from 'axios';
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
+import { ChatState } from '../Context/ChatProvider';
 
 const Login = () => {
 
@@ -10,6 +11,7 @@ const Login = () => {
     const [ShowP, setShowP] = useState(false);
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
+    const { fetchAgain, setFetchAgain } = ChatState(false);
     const toast = useToast();
     const navigate = useNavigate();
 
@@ -47,7 +49,8 @@ const Login = () => {
                 position: "bottom",
             });
             localStorage.setItem("userInfo", JSON.stringify(data));
-            setLoading(false);
+          setLoading(false);
+          window.location.reload();
             navigate("/chats");
         } catch (error) {
             toast({

@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from "react";
 import profilePic from "../../assets/Rudraveer.png";
 import downArrow from "../../assets/downarrow.svg";
-import { searchIcon } from "../../assets/magnifying-glass-svgrepo-com.svg";
 import "./ChatUsers.css";
 import axios from "axios";
 import {
   Box,
-  Button,
   Menu,
   MenuButton,
   MenuItem,
@@ -17,20 +15,17 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { ChatState } from "../Context/ChatProvider";
-import ChatLoading from "../ChatLoading";
 import UserListItem from "./UserListItem/UserListItem";
-import { getReciever, getRecieverPic, getSender, getSenderId } from "../../config/ChatLogic";
+import { getRecieverPic, getSender, getSenderId } from "../../config/ChatLogic";
 import GroupChatModal from "./GroupChatModal/GroupChatModal";
-import CryptoJS from "crypto-js";
-import imageCompression from "browser-image-compression";
 
-const ChatUsers = ({fetchAgain, setFetchAgain}) => {
+const ChatUsers = () => {
   const [loggedUser, setLoggedUser] = useState();
   const [search, setSearch] = useState("");
   const [searchResult, setSearchResult] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingChat, setLoadingChat] = useState(false);
-  const { user, selectedChat, setSelectedChat, chats, setChats } = ChatState();
+  const { user, selectedChat, setSelectedChat, chats, setChats, fetchAgain, setFetchAgain } = ChatState();
   const toast = useToast();
 
   const handleSearch = async () => {
@@ -202,10 +197,10 @@ const ChatUsers = ({fetchAgain, setFetchAgain}) => {
   // }
 
   useEffect(() => {
-    fetchChats();
     setLoggedUser(JSON.parse(localStorage.getItem("userInfo")));
+    fetchChats();
     // console.log("ChatUsers useEffect called");
-    // console.log("selectedChat: ", selectedChat);
+    console.log("loggedUser: ", loggedUser);
   }, [fetchAgain]);
 
   return (
@@ -215,12 +210,12 @@ const ChatUsers = ({fetchAgain, setFetchAgain}) => {
       </div> */}
       <div className="avatarSection">
         <div className="avatar">
-          {selectedChat ? (
+          {user && selectedChat ? (
             <img
               src={
                 selectedChat.isGroupChat
                   ? profilePic
-                  : getRecieverPic(loggedUser, selectedChat.users)
+                  : getRecieverPic(user, selectedChat.users)
               }
               alt="profilePic"
             />
@@ -288,61 +283,61 @@ const ChatUsers = ({fetchAgain, setFetchAgain}) => {
         </div>
         <div className="userListSection">
           <div className="users">
-            {chats.length !== 0 ? (
+            {chats && chats.length !== 0 ? (
               <Stack overflowY={"scroll"}>
-                {chats?.map((chat) => (
-                  <Box
-                    className="user1"
-                    onClick={() => {
-                      accessChat(getSenderId(user, chat.users));
-                    }}
-                    cursor={"pointer"}
-                    bg={
-                      selectedChat === chat ? "rgb(248, 211, 217)" : "#F0F3F6"
-                    }
-                    // bg={selectedChat === chat ? "#38B2AC" : "#F0F3F6"}
-                    // color={selectedChat === chat ? "6cb8b5" : "black"}
-                    px={3}
-                    py={2}
-                    borderRadius={"lg"}
-                    key={chat._id}
-                  >
-                    <div className="userPic">
-                      {chat ? (
-                        <img
-                          src={
-                            chat.isGroupChat
-                              ? profilePic
-                              : getRecieverPic(loggedUser, chat.users)
-                          }
-                          alt="profilePic"
-                        />
-                      ) : (
-                        <img src={profilePic} alt="profilePic" />
-                      )}
-                    </div>
-                    <div className="userContainer">
-                      <div className="userName">
-                        <Text className="text">
-                          {!chat.isGroupChat
-                            ? getSender(loggedUser, chat.users)
-                            : chat.chatName}
-                        </Text>
+                {chats &&
+                  chats?.map((chat) => (
+                    <Box
+                      className="user1"
+                      onClick={() => {
+                        accessChat(getSenderId(user, chat.users));
+                      }}
+                      cursor={"pointer"}
+                      bg={
+                        selectedChat === chat ? "rgb(248, 211, 217)" : "#F0F3F6"
+                      }
+                      // color={selectedChat === chat ? "6cb8b5" : "black"}
+                      px={3}
+                      py={2}
+                      borderRadius={"lg"}
+                      key={chat._id}
+                    >
+                      <div className="userPic">
+                        {user && chat ? (
+                          <img
+                            src={
+                              chat.isGroupChat
+                                ? profilePic
+                                : getRecieverPic(user, chat.users)
+                            }
+                            alt="profilePic"
+                          />
+                        ) : (
+                          <img src={profilePic} alt="profilePic" />
+                        )}
                       </div>
-                      <div className="userTyping">
-                        <p>typing...</p>
+                      <div className="userContainer">
+                        <div className="userName">
+                          <Text className="text">
+                            {user && !chat.isGroupChat
+                              ? getSender(loggedUser, chat.users)
+                              : chat.chatName}
+                          </Text>
+                        </div>
+                        <div className="userTyping">
+                          <p>typing...</p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="lastMsgTimeContainer">
-                      <div className="lastMsgTime">
-                        <p>22:30 PM</p>
+                      <div className="lastMsgTimeContainer">
+                        <div className="lastMsgTime">
+                          <p>22:30 PM</p>
+                        </div>
+                        <div className="lastMsgTimeEmpty">
+                          <p></p>
+                        </div>
                       </div>
-                      <div className="lastMsgTimeEmpty">
-                        <p></p>
-                      </div>
-                    </div>
-                  </Box>
-                ))}
+                    </Box>
+                  ))}
               </Stack>
             ) : (
               searchResult?.map((user) => (

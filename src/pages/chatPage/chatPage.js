@@ -8,8 +8,8 @@ import { useNavigate } from "react-router";
 import { ChatState } from "../../components-chakra/Context/ChatProvider";
 
 const ChatPage = () => {
-  const [ fetchAgain, setFetchAgain ] = useState(false);
-  const { user } = ChatState();
+  // const [ fetchAgain, setFetchAgain ] = useState(false);
+  const { user, fetchAgain, setFetchAgain } = ChatState();
   const navigate = useNavigate();
 
   // console.log(user);
@@ -18,26 +18,30 @@ const ChatPage = () => {
   //   navigate("/");
   // }
 
-  useEffect(() => {
-    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-    if (!userInfo) {
-      navigate("/");
-    }
-  }, [navigate]);
+  useEffect(
+    () => {
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      if (!userInfo) {
+        navigate("/");
+      }
+    },
+    [fetchAgain],
+    [navigate]
+  );
 
   return (
     <div className="chatPage">
       <Menubar></Menubar>
       {user && (
         <ChatUsers
-          fetchAgain={fetchAgain}
-          setFetchAgain={setFetchAgain}
+          // fetchAgain={fetchAgain}
+          // setFetchAgain={setFetchAgain}
         ></ChatUsers>
       )}
       {user && (
         <ChatSection
-          fetchAgain={fetchAgain}
-          setFetchAgain={setFetchAgain}
+          // fetchAgain={fetchAgain}
+          // setFetchAgain={setFetchAgain}
         ></ChatSection>
       )}
       <FilesContent></FilesContent>

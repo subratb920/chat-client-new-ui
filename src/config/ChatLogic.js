@@ -1,11 +1,13 @@
 export const getSender = (user, users) => {
     // console.log("getSender called. Returning: ", users[0]._id === user._id ? users[1].name : users[0].name);
-    return users[0]._id === user._id ? users[1]?.name : users[0]?.name;
+    return users[0]?._id === user?._id ? users[1]?.name : users[0]?.name;
 };
 
 export const getRecieverPic = (user, users) => {
+  console.log("users", users);
+  console.log("user", user);
   // console.log("getSender called. Returning: ", users[0]._id === user._id ? users[1].name : users[0].name);
-  return users[0]._id === user._id ? users[1]?.pic : users[0]?.pic;
+  return users[0]?._id === user._id ? users[1]?.pic : users[0]?.pic;
 };
 
 export const getSenderId = (loggedUser, users) => {
