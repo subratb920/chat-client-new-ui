@@ -4,6 +4,7 @@ import downArrow from "../../assets/downarrow.svg";
 import "./ChatUsers.css";
 import axios from "axios";
 import {
+  Avatar,
   Box,
   Menu,
   MenuButton,
@@ -67,31 +68,40 @@ const ChatUsers = () => {
     }
   };
 
-  const accessChat = async (userId) => {
-    try {
-      setLoadingChat(true);
-      const config = {
-        headers: {
-          "Content-type": "application/json",
-          Authorization: `Bearer ${user.token}`,
-        },
-      };
-      const { data } = await axios.post(`/api/chat`, { userId }, config);
-      if (!chats.find((c) => c._id === data._id)) setChats([data, ...chats]);
-      // console.log("CHat data for selected user: ", data);
-      setSelectedChat(data);
+  const accessChat = async (chatSelected) => {
+    console.log("accessChat called...");
+    if (chatSelected.isGroupChat) {
+      setSelectedChat(chatSelected);
       setLoadingChat(false);
       setFetchAgain(!fetchAgain);
-      // console.log("Printing reciever pic: ", getReciever(loggedUser, selectedChat.users).pic);
-    } catch (error) {
-      toast({
-        title: "Error Occured!",
-        description: "Failed to Load the chats",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-        position: "bottom-left",
-      });
+    } else {
+      try {
+        const userId = getSenderId(user, chatSelected.users);
+        console.log("Sender id: ", userId);
+        setLoadingChat(true);
+        const config = {
+          headers: {
+            "Content-type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+        };
+        const { data } = await axios.post(`/api/chat`, { userId }, config);
+        if (!chats.find((c) => c._id === data._id)) setChats([data, ...chats]);
+        console.log("Chat data for selected user: ", data);
+        setSelectedChat(data);
+        setLoadingChat(false);
+        setFetchAgain(!fetchAgain);
+        // console.log("Printing reciever pic: ", getReciever(loggedUser, selectedChat.users).pic);
+      } catch (error) {
+        toast({
+          title: "Error Occured!",
+          description: "Failed to Load the chats",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+          position: "bottom-left",
+        });
+      }
     }
   };
 
@@ -106,7 +116,7 @@ const ChatUsers = () => {
       const { data } = await axios.get("/api/chat", config);
       // console.log("Data fetched", data);
       setChats(data);
-      // console.log("Chats set", chats);
+      console.log("Chats set", chats);
     } catch (error) {
       toast({
         title: "Error Occured!",
@@ -199,7 +209,7 @@ const ChatUsers = () => {
   useEffect(() => {
     setLoggedUser(JSON.parse(localStorage.getItem("userInfo")));
     fetchChats();
-    // console.log("ChatUsers useEffect called");
+    console.log("ChatUsers useEffect called");
     console.log("loggedUser: ", loggedUser);
   }, [fetchAgain]);
 
@@ -211,6 +221,7 @@ const ChatUsers = () => {
       <div className="avatarSection">
         <div className="avatar">
           {user && selectedChat ? (
+            // <Avatar size={"lg"} name={user.name} src={profilePic} />
             <img
               src={
                 selectedChat.isGroupChat
@@ -220,17 +231,18 @@ const ChatUsers = () => {
               alt="profilePic"
             />
           ) : (
+            // <Avatar size={"lg"} name={user.name} src={profilePic} />
             <img src={profilePic} alt="profilePic" />
           )}
         </div>
         <div className="userName">
           <p>
-            {selectedChat
+            {selectedChat && !selectedChat?.isGroupChat
               ? getSender(
                   JSON.parse(localStorage.getItem("userInfo")),
                   selectedChat?.users
                 )
-              : ""}
+              : selectedChat?.chatName}
           </p>
         </div>
         <div className="userStatus">
@@ -290,7 +302,7 @@ const ChatUsers = () => {
                     <Box
                       className="user1"
                       onClick={() => {
-                        accessChat(getSenderId(user, chat.users));
+                        accessChat(chat);
                       }}
                       cursor={"pointer"}
                       bg={
@@ -320,7 +332,7 @@ const ChatUsers = () => {
                         <div className="userName">
                           <Text className="text">
                             {user && !chat.isGroupChat
-                              ? getSender(loggedUser, chat.users)
+                              ? getSender(user, chat.users)
                               : chat.chatName}
                           </Text>
                         </div>

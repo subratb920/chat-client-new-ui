@@ -13,7 +13,8 @@ import { ChatState } from "../Context/ChatProvider";
 const ScrollableChat = ({ messages }) => {
   const { user } = ChatState();
   return (
-    <ScrollableFeed>
+    <ScrollableFeed style={{ height: "100%", width: "100%" }}>
+      {console.log("messages", messages)}
       {messages &&
         messages.map((m, i) => (
           <div style={{ display: "flex" }} key={m._id}>
@@ -31,7 +32,7 @@ const ScrollableChat = ({ messages }) => {
               style={{
                 backgroundColor: `${
                   m.sender._id === user._id ? "#BEE3F8" : "#B9F5D0"
-                }`,
+                  }`,
                 borderRadius: "20px",
                 padding: "5px 15px",
                 maxWidth: "75%",

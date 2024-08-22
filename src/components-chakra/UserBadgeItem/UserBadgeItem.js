@@ -4,7 +4,8 @@ import React from 'react'
 
 const UserBadgeItem = ({ user, handleFunction }) => {
   return (
-      <Box
+    <Box
+          // w={"30%"}
           px={2}
           py={1}
           bg="blue.400"
@@ -12,7 +13,7 @@ const UserBadgeItem = ({ user, handleFunction }) => {
           m={1}
           mb={2}
           variant="solid"
-          fontSize="12px"
+          fontSize={12}
           bgColor="purple"
           color={"white"}
           cursor="pointer"

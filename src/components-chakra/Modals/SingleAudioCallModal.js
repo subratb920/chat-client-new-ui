@@ -1,35 +1,29 @@
-import { ViewIcon } from "@chakra-ui/icons";
-import {
-  Box,
-  Button,
-  FormControl,
-  IconButton,
-  Input,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
-  Spinner,
-  useDisclosure,
-  useToast,
-} from "@chakra-ui/react";
-import React, { useState } from "react";
-import { ChatState } from "../Context/ChatProvider";
-import UserBadgeItem from "../UserBadgeItem/UserBadgeItem";
-import axios from "axios";
-import UserListItem from "../ChatUsers/UserListItem/UserListItem";
+import { Box, Button, FormControl, IconButton, Input, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Spinner, Text, useDisclosure, useToast } from '@chakra-ui/react';
+import React, { useState } from 'react'
+import UserListItem from '../ChatUsers/UserListItem/UserListItem';
+import axios from 'axios';
+import { PhoneIcon, ViewIcon } from '@chakra-ui/icons';
+import UserBadgeItem from '../UserBadgeItem/UserBadgeItem';
+import { ChatState } from '../Context/ChatProvider';
+import { getSender } from '../../config/ChatLogic';
+import { VscUnmute } from "react-icons/vsc";
+import { VscMute } from "react-icons/vsc";
+import { IoVideocamOutline } from "react-icons/io5";
 
-const UpdateGroupChatModal = ({ fetchAgain, setFetchAgain, fetchMessages, children  }) => {
+const SingleAudioCallModal = ({
+  selectedChat,
+  setSelectedChat,
+  fetchAgain,
+  setFetchAgain,
+  fetchMessages,
+}) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [groupChatName, setGroupChatName] = useState("");
   const [search, setSearch] = useState();
   const [searchResult, setSearchResult] = useState();
   const [loading, setLoading] = useState();
   const [renameLoading, setRenameLoading] = useState();
-  const { selectedChat, setSelectedChat, user } = ChatState();
+  const { user } = ChatState();
   const toast = useToast();
 
   const handleRemove = async (user1) => {
@@ -219,82 +213,118 @@ const UpdateGroupChatModal = ({ fetchAgain, setFetchAgain, fetchMessages, childr
   };
 
   return (
-    <>
-      {children ? (
-        <span onClick={onOpen}>{children}</span>
-      ) : (
-      <IconButton d={{ base: "flex" }} icon={<ViewIcon />} onClick={onOpen} />
-      )}
-      <Modal isOpen={isOpen} onClose={onClose} isCentered>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader
-            fontSize={"35px"}
-            fontFamily={"Work sans"}
-            d="flex"
-            justifyContent={"center"}
-          >
-            {selectedChat?.chatName}
-          </ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <Box w="100%" d="flex" flexWrap="wrap" pb={3}>
-              {selectedChat?.users.map((u) => (
-                <UserBadgeItem
-                  key={u._id}
-                  user={u}
-                  handleFunction={() => handleRemove(u)}
-                />
-              ))}
-            </Box>
-            <FormControl d="flex">
-              <Input
-                placeholder="Chat Name"
-                mb={3}
-                value={groupChatName}
-                onChange={(e) => changeGroupChatName(e.target.value)}
-              />
-              <Button
-                variant={"solid"}
-                colorScheme="teal"
-                ml={3}
-                isLoading={renameLoading}
-                onClick={handleRename}
-              >
-                Rename
-              </Button>
-            </FormControl>
-            <FormControl>
-              <Input
-                placeholder="Add Users to Group"
-                mb={1}
-                onChange={(e) => handleSearch(e.target.value)}
-              />
-            </FormControl>
-            {loading ? (
-              <Spinner size="lg" />
-            ) : (
-              searchResult
-                ?.slice(0, 4)
-                .map((user) => (
-                  <UserListItem
-                    key={user._id}
-                    user={user}
-                    handleFunction={() => handleAddUser(user)}
+    <div>
+      <>
+        <IconButton
+          margin={2}
+          // colorScheme="blue"
+          aria-label="Call Segun"
+          size="lg"
+          d={{ base: "flex" }}
+          onClick={onOpen}
+          icon={<VscUnmute />}
+        />
+        <Modal
+          backgroundColor={"white"}
+          isOpen={isOpen}
+          onClose={onClose}
+          isCentered
+          width={"100%"}
+          height={"100%"}
+        >
+          {/* <ModalOverlay /> */}
+          <ModalContent backgroundColor={"gray"} w={"100%"} h={"100%"}>
+            <ModalHeader
+              fontSize={"35px"}
+              fontFamily={"Work sans"}
+              d="flex"
+              justifyContent={"center"}
+              alignItems={"center"}
+            >
+              {/* {getSender(user, selectedChat.users)} */}
+              <ModalCloseButton color={"white"} />
+            </ModalHeader>
+            <ModalBody backgroundColor={"black"} w={"100%"} h={"100%"}>
+              <Box d="flex" flexWrap="wrap" pb={3} w={"100%"} h={"100%"}>
+                {/* {selectedChat?.users.map((u) => (
+                  <UserBadgeItem
+                    key={u._id}
+                    user={u}
+                    handleFunction={() => handleRemove(u)}
                   />
-                ))
-            )}
-          </ModalBody>
+                ))} */}
+              </Box>
+              {/* <FormControl d="flex">
+                <Input
+                  placeholder="Chat Name"
+                  mb={3}
+                  value={groupChatName}
+                  onChange={(e) => changeGroupChatName(e.target.value)}
+                />
+                <Button
+                  variant={"solid"}
+                  colorScheme="teal"
+                  ml={3}
+                  isLoading={renameLoading}
+                  onClick={handleRename}
+                >
+                  Rename
+                </Button>
+              </FormControl>
+              <FormControl>
+                <Input
+                  placeholder="Add Users to Group"
+                  mb={1}
+                  onChange={(e) => handleSearch(e.target.value)}
+                />
+              </FormControl>
+              {loading ? (
+                <Spinner size="lg" />
+              ) : (
+                searchResult
+                  ?.slice(0, 4)
+                  .map((user) => (
+                    <UserListItem
+                      key={user._id}
+                      user={user}
+                      handleFunction={() => handleAddUser(user)}
+                    />
+                  ))
+              )} */}
+            </ModalBody>
 
-          <ModalFooter>
-            <Button colorScheme="red" mr={3} onClick={() => handleRemove(user)}>
-              Leave Group
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </>
+            <ModalFooter
+              d="flex"
+              justifyContent={"center"}
+              backgroundColor={"black"}
+            >
+              <IconButton
+                margin={2}
+                colorScheme="green"
+                aria-label="Call Segun"
+                size="lg"
+                icon={<VscUnmute />}
+              />
+              <IconButton
+                margin={2}
+                colorScheme="blue"
+                aria-label="Call Segun"
+                size="lg"
+                icon={<IoVideocamOutline />}
+              />
+              <IconButton
+                margin={2}
+                colorScheme="red"
+                aria-label="Call Segun"
+                size="lg"
+                icon={<PhoneIcon />}
+              />
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      </>
+    </div>
   );
 };
 
-export default UpdateGroupChatModal;
+export default SingleAudioCallModal;

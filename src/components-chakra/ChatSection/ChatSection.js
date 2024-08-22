@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import sendSVG from "../../assets/send.svg"
 import './ChatSection.css'
 import { ChatState } from '../Context/ChatProvider';
-import { Box, Icon, Spinner, Stack, Text, useToast } from '@chakra-ui/react';
+import { Box, Button, Icon, Spinner, Stack, Text, useToast } from '@chakra-ui/react';
 import ChatLoading from "../ChatLoading";
 import axios from 'axios';
 import { getSender, getSenderFull } from "../../config/ChatLogic";
@@ -13,11 +13,14 @@ import ScrollableChat from '../ScrollableChat/ScrollableChat';
 import io from "socket.io-client";
 import Lottie from "react-lottie";
 import animationData from "../animations/Animation - 1723167029798.json";
+import SingleVideoCallModal from '../Modals/SingleVideoCallModal';
+import SingleAudioCallModal from '../Modals/SingleAudioCallModal';
+import { useSocket } from '../Context/SocketProvider';
 
-const ENDPOINT = "http://localhost:8080";
-var socket, selectedChatCompare;
+var selectedChatCompare;
 
 const ChatSection = () => {
+  const socket = useSocket();
 
   const [loggedUser, setLoggedUser] = useState();
   const [messages, setMessages] = useState([]);
@@ -26,6 +29,8 @@ const ChatSection = () => {
   const [socketConnected, setSocketConnected] = useState(false);
   const [typing, setTyping] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [openVideoModal, setOpenVideoModal] = useState(false);
+  const [openAudioModal, setOpenAudioModal] = useState(false);
 
   const defaultOptions = {
     loop: true,
@@ -127,7 +132,8 @@ const ChatSection = () => {
   }
 
   useEffect(() => {
-    socket = io(ENDPOINT);
+    // socket = io(ENDPOINT);
+    console.log("selectedChat in chatSection: ",selectedChat)
     socket.emit("setup", user);
     socket.on("connected", () => {
       setSocketConnected(true);
@@ -140,7 +146,7 @@ const ChatSection = () => {
   useEffect(() => {
     setLoggedUser(JSON.parse(localStorage.getItem("userInfo")));
     fetchMessages()
-
+    console.log("selectedChat: ", selectedChat);
     selectedChatCompare = selectedChat;
   }, [fetchAgain]);
 
@@ -178,30 +184,50 @@ const ChatSection = () => {
           alignItems={"center"}
           gap={3}
           fontWeight={"bold"}
+          cursor={"pointer"}
         >
-          <Icon
+          {/* <Icon
             d={{ base: "flex", md: "none" }}
             icon={<ArrowBackIcon />}
             onClick={() => setSelectedChat("")}
-          />
+          /> */}
           {selectedChat && !selectedChat?.isGroupChat ? (
             <>
-              {getSender(user, selectedChat?.users).toUpperCase()}
-              <ProfileModal user={getSenderFull(user, selectedChat?.users)} />
+              <ProfileModal user={getSenderFull(user, selectedChat?.users)}>
+                {getSender(user, selectedChat?.users).toUpperCase()}
+              </ProfileModal>
             </>
           ) : (
             <>
-              {selectedChat?.chatName.toUpperCase()}
-              {
-                <UpdateGroupChatModal
-                  fetchAgain={fetchAgain}
-                  setFetchAgain={setFetchAgain}
-                  fetchMessages={fetchMessages}
-                />
-              }
+              <UpdateGroupChatModal
+                fetchAgain={fetchAgain}
+                setSelectedChat={setSelectedChat}
+                setFetchAgain={setFetchAgain}
+                fetchMessages={fetchMessages}
+              >
+                {selectedChat?.chatName.toUpperCase()}
+              </UpdateGroupChatModal>
             </>
           )}
         </Text>
+
+        {selectedChat && (
+          <SingleAudioCallModal
+            selectedChat={selectedChat}
+            setSelectedChat={setSelectedChat}
+            fetchAgain={fetchAgain}
+            setFetchAgain={setFetchAgain}
+            fetchMessages={fetchMessages}
+          ></SingleAudioCallModal>
+        )}
+
+        {selectedChat && (
+          <SingleVideoCallModal
+            openVideoModal={openVideoModal}
+            setOpenVideoModal={setOpenVideoModal}
+            remoteUser={getSenderFull(user, selectedChat?.users)}
+          ></SingleVideoCallModal>
+        )}
         {/* <p>
           Chatting with{" "}
           {selectedChat ? getSender(loggedUser, selectedChat?.users) : ""}
@@ -218,13 +244,17 @@ const ChatSection = () => {
           ) : (
             <p> Click on a user to start chatting</p>
           )}
-          {isTyping ? <div>
-            <Lottie
-              options={defaultOptions}
-              width={70}
-              style={{ marginBottom: 15, marginLeft: 0 }}
-            />
-          </div> : <></>}
+          {isTyping ? (
+            <div>
+              <Lottie
+                options={defaultOptions}
+                width={70}
+                style={{ marginBottom: 15, marginLeft: 0 }}
+              />
+            </div>
+          ) : (
+            <></>
+          )}
         </div>
         <div className="inputSection" onKeyDown={sendMessage}>
           <input

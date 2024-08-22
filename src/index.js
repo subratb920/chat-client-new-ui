@@ -10,6 +10,7 @@ import CallsPage from './pages/callsPage/callsPage';
 import FilesPage from './pages/filesPage/filePage';
 import ChatProvider from './components-chakra/Context/ChatProvider';
 import ErrorBoundary from './ErrorBoundary';
+import { SocketProvider } from './components-chakra/Context/SocketProvider';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 const router = createBrowserRouter(
@@ -25,9 +26,11 @@ const router = createBrowserRouter(
 root.render(
   <ErrorBoundary>
     <ChatProvider>
+      <SocketProvider>
       <ChakraProvider>
         <RouterProvider router={router} />
       </ChakraProvider>
+      </SocketProvider>
     </ChatProvider>
   </ErrorBoundary>
 );
