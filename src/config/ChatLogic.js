@@ -47,7 +47,7 @@ export const isSameSenderMargin = (messages, m, i, userId) => {
     messages[i + 1].sender._id === m.sender._id &&
     messages[i].sender._id !== userId
   ) {
-    console.log("returning 33 for ", m ," of ", i);
+    // console.log("returning 33 for ", m ," of ", i);
     return 33;
   } else if (
     (i < messages.length - 1 &&
@@ -55,10 +55,10 @@ export const isSameSenderMargin = (messages, m, i, userId) => {
       messages[i].sender._id !== userId) ||
     (messages.length - 1 === i && messages[i].sender._id !== userId)
   ) {
-    console.log("returning 0 for ", m, " of ", i);
+    // console.log("returning 0 for ", m, " of ", i);
     return 0;
   } else {
-    console.log("returning auto for ", m, " of ", i);
+    // console.log("returning auto for ", m, " of ", i);
     return "auto";
   }
 };

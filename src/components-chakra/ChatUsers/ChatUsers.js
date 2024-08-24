@@ -51,7 +51,7 @@ const ChatUsers = () => {
           },
         };
         const { data } = await axios.get(`/api/user?search=${search}`, config);
-        // console.log("Data recieved: ", data);
+        console.log("Data recieved: ", data);
         setLoading(false);
         setSearchResult(data);
       } catch (error) {
@@ -78,6 +78,39 @@ const ChatUsers = () => {
       try {
         const userId = getSenderId(user, chatSelected.users);
         console.log("Sender id: ", userId);
+        setLoadingChat(true);
+        const config = {
+          headers: {
+            "Content-type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+        };
+        const { data } = await axios.post(`/api/chat`, { userId }, config);
+        if (!chats.find((c) => c._id === data._id)) setChats([data, ...chats]);
+        console.log("Chat data for selected user: ", data);
+        setSelectedChat(data);
+        setLoadingChat(false);
+        setFetchAgain(!fetchAgain);
+        // console.log("Printing reciever pic: ", getReciever(loggedUser, selectedChat.users).pic);
+      } catch (error) {
+        toast({
+          title: "Error Occured!",
+          description: "Failed to Load the chats",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+          position: "bottom-left",
+        });
+      }
+    }
+  };
+
+  const accessUserChat = async (userId) => {
+    console.log("accessChat called...");
+    if (userId) {
+      try {
+        // const userId = getSenderId(user, chatSelected.users);
+        console.log("Searched user id: ", userId);
         setLoadingChat(true);
         const config = {
           headers: {
@@ -209,8 +242,8 @@ const ChatUsers = () => {
   useEffect(() => {
     setLoggedUser(JSON.parse(localStorage.getItem("userInfo")));
     fetchChats();
-    console.log("ChatUsers useEffect called");
-    console.log("loggedUser: ", loggedUser);
+    // console.log("ChatUsers useEffect called");
+    // console.log("loggedUser: ", loggedUser);
   }, [fetchAgain]);
 
   return (
@@ -357,7 +390,7 @@ const ChatUsers = () => {
                 <UserListItem
                   key={user?._id}
                   user={user}
-                  handleFunction={() => accessChat(user?._id)}
+                  handleFunction={() => accessUserChat(user?._id)}
                 />
               ))
             )}
