@@ -1,16 +1,15 @@
 import './App.css';
-import ChatSection from './components/ChatSection/ChatSection';
-import ChatUsers from './components/ChatUsers/ChatUsers';
-import FilesContent from './components/FilesContent/FilesContent';
-import Menubar from './components/Menubar/Menubar';
+import { Outlet } from 'react-router-dom';
+import Header from './components-chakra/Header/Header';
 
 function App() {
+
+  
+  
   return (
     <div className="App">
-      <Menubar></Menubar>
-      <ChatUsers></ChatUsers>
-      <ChatSection></ChatSection>
-      <FilesContent></FilesContent>
+        <Header />
+        <Outlet/>
     </div>
   );
 }
