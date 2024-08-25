@@ -2,7 +2,7 @@
   "name": "chat-client",
   "version": "0.1.0",
   "private": true,
-  "proxy": "http://65.0.98.86/",
+  "proxy": "https://65.0.98.86/",
   "dependencies": {
     "@chakra-ui/icons": "^2.1.1",
     "@chakra-ui/react": "^2.8.2",
