@@ -6,7 +6,8 @@ import { ChatState } from "./ChatProvider";
 const SocketContext = createContext();
 
 // const ENDPOINT = "http://localhost:8080";
-const ENDPOINT = "http://65.0.98.86";
+// const ENDPOINT = "http://65.0.98.86";
+const ENDPOINT = "https://apichainchat.in";
 const socket = io(ENDPOINT);
 
 const SocketProvider = ({ children }) => {

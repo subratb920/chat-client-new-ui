@@ -3,7 +3,8 @@ import { io } from "socket.io-client";
 
 const SocketContext = createContext(null);
 
-const ENDPOINT = "http://65.0.98.86/";
+// const ENDPOINT = "http://localhost:8080";
+const ENDPOINT = "https://apichainchat.in";
 
 export const useSocket = () => {
   const socket = useContext(SocketContext);
