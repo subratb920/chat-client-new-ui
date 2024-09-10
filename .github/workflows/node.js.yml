@@ -24,14 +24,10 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-    - run: npm ci
+    - run: npm ci --legacy-peer-deps
     - run: npm run build --if-present
-     
-     #Clean up the /var/www/html/ folder. Nginx creates these folders and uses them serve our static files. We will remove the default files.  
     - name: Clear contents of /var/www/html
       run: sudo rm -rf /var/www/html/*
-
-    #Copy the production files from /home/ubuntu... to /var/www/html
     - name: Copy dist folder to /var/www/html
       run: sudo cp -r dist/* /var/www/html
     
