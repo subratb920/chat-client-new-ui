@@ -139,8 +139,8 @@ const ChatUsers = () => {
   };
 
   const fetchChats = async () => {
-    const { initMsg } = await axios.get("/api");
-    console.log("initMsg: ", initMsg);
+    // const { initMsg } = await axios.get("/");
+    // console.log("initMsg: ", initMsg);
     try {
       const config = {
         headers: {
