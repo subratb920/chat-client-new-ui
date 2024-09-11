@@ -26,6 +26,15 @@ const SingleAudioCallModal = ({
   const { user } = ChatState();
   const toast = useToast();
 
+  const apiClient = axios.create({
+    baseURL: process.env.REACT_APP_API_URL, // This will pick up the API URL based on the environment
+    timeout: 10000,
+    headers: {
+      "Content-type": "application/json",
+      Authorization: `Bearer ${user.token}`,
+    },
+  });
+
   const handleRemove = async (user1) => {
     // console.log("Handle remove called...");
     if (selectedChat?.groupAdmin._id !== user._id && user1._id !== user._id) {
@@ -46,13 +55,12 @@ const SingleAudioCallModal = ({
           Authorization: `Bearer ${user.token}`,
         },
       };
-      const { data } = await axios.put(
+      const { data } = await apiClient.put(
         `/api/chat/group/remove`,
         {
           chatId: selectedChat?._id,
           userId: user1._id,
-        },
-        config
+        }
       );
       // console.log("Exit Group data: ", data);
       setSelectedChat(data);
@@ -95,13 +103,12 @@ const SingleAudioCallModal = ({
             Authorization: `Bearer ${user.token}`,
           },
         };
-        const { data } = await axios.put(
+        const { data } = await apiClient.put(
           `/api/chat/group/rename`,
           {
             chatId: selectedChat?._id,
             chatName: groupChatName,
-          },
-          config
+          }
         );
         // console.log(data?._id);
         setSelectedChat(data);
@@ -141,7 +148,9 @@ const SingleAudioCallModal = ({
           Authorization: `Bearer ${user.token}`,
         },
       };
-      const { data } = await axios.get(`/api/user?search=${search}`, config);
+      const { data } = await apiClient.get(
+        `/api/user?search=${search}`
+      );
       // console.log(data);
       setLoading(false);
       setSearchResult(data);
@@ -188,13 +197,12 @@ const SingleAudioCallModal = ({
           Authorization: `Bearer ${user.token}`,
         },
       };
-      const { data } = await axios.put(
-        `https://apichainchat.in/api/chat/group/add`,
+      const { data } = await apiClient.put(
+        `/api/chat/group/add`,
         {
           chatId: selectedChat?._id,
           userId: user1._id,
-        },
-        config
+        }
       );
 
       setSelectedChat(data);

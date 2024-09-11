@@ -44,6 +44,15 @@ const ChatSection = () => {
   const { user, selectedChat, setSelectedChat, notification, setNotification, fetchAgain, setFetchAgain } = ChatState();
   const toast = useToast();
 
+  const apiClient = axios.create({
+    baseURL: process.env.REACT_APP_API_URL, // This will pick up the API URL based on the environment
+    timeout: 10000,
+    headers: {
+      "Content-type": "application/json",
+      Authorization: `Bearer ${user.token}`,
+    },
+  });
+
   const fetchMessages = async () => {
     if (!selectedChat) return;
     try {
@@ -53,9 +62,8 @@ const ChatSection = () => {
           Authorization: `Bearer ${user.token}`,
         },
       };
-      const { data } = await axios.get(
-        `https://apichainchat.in/api/message/${selectedChat._id}`,
-        config
+      const { data } = await apiClient.get(
+        `/api/message/${selectedChat._id}`
       );
       // console.log("Messages: ",data);
       setMessages(data);
@@ -84,13 +92,12 @@ const ChatSection = () => {
             Authorization: `Bearer ${user.token}`,
           },
         };
-        const { data } = await axios.post(
-          "https://apichainchat.in/api/message",
+        const { data } = await apiClient.post(
+          "/api/message",
           {
             content: newMessage,
             chatId: selectedChat?._id,
-          },
-          config
+          }
         );
         // console.log(data);
         setMessages([...messages, data]);

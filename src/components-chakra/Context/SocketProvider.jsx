@@ -5,7 +5,7 @@ const SocketContext = createContext(null);
 
 // const ENDPOINT = "http://localhost:8080/";
 // const ENDPOINT = "http://65.0.98.86";
-const ENDPOINT = "https://apichainchat.in";
+const ENDPOINT = process.env.REACT_APP_API_URL;
 // const ENDPOINT = "apichainchat.in/";
 
 export const useSocket = () => {

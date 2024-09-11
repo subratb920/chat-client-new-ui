@@ -15,6 +15,13 @@ const Signup = () => {
   const [pic, setPic] = useState();
   const [loading, setLoading] = useState(false);
 
+  const apiClient = axios.create({
+    baseURL: process.env.REACT_APP_API_URL, // This will pick up the API URL based on the environment
+    timeout: 10000,
+    headers: {
+      "Content-type": "application/json",
+    },
+  });
   const toast = useToast();
   const navigate = useNavigate();
 
@@ -91,10 +98,9 @@ const Signup = () => {
           ...config,
         });
         
-        const { data } = await axios.post(
-          "https://apichainchat.in/api/image-url/",
-          formData,
-          config
+        const { data } = await apiClient.post(
+          "/api/image-url/",
+          formData
         );
         console.log("Image uploaded succesfully: ", data.imageUrl);
         setPic(data.imageUrl);
@@ -142,15 +148,14 @@ const Signup = () => {
           "Content-type": "application/json",
         },
       };
-      const { data } = await axios.post(
+      const { data } = await apiClient.post(
         "https://apichainchat.in/api/user",
         {
           name,
           email,
           password,
           pic,
-        },
-        config
+        }
       );
       console.log(data);
       toast({

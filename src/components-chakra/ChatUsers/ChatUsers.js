@@ -29,6 +29,15 @@ const ChatUsers = () => {
   const { user, selectedChat, setSelectedChat, chats, setChats, fetchAgain, setFetchAgain } = ChatState();
   const toast = useToast();
 
+  const apiClient = axios.create({
+    baseURL: process.env.REACT_APP_API_URL, // This will pick up the API URL based on the environment
+    timeout: 10000,
+    headers: {
+      "Content-type": "application/json",
+      Authorization: `Bearer ${user.token}`,
+    },
+  });
+
   const handleSearch = async () => {
     if (!search) {
       setLoading(true);
@@ -50,9 +59,8 @@ const ChatUsers = () => {
             Authorization: `Bearer ${user.token}`,
           },
         };
-        const { data } = await axios.get(
-          `https://apichainchat.in/api/user?search=${search}`,
-          config
+        const { data } = await apiClient.get(
+          `/api/user?search=${search}`
         );
         console.log("Data recieved: ", data);
         setLoading(false);
@@ -88,10 +96,9 @@ const ChatUsers = () => {
             Authorization: `Bearer ${user.token}`,
           },
         };
-        const { data } = await axios.post(
-          `https://apichainchat.in/api/chat`,
-          { userId },
-          config
+        const { data } = await apiClient.post(
+          `/api/chat`,
+          { userId }
         );
         if (!chats.find((c) => c._id === data._id)) setChats([data, ...chats]);
         console.log("Chat data for selected user: ", data);
@@ -125,7 +132,10 @@ const ChatUsers = () => {
             Authorization: `Bearer ${user.token}`,
           },
         };
-        const { data } = await axios.post(`https://apichainchat.in/api/chat`, { userId }, config);
+        const { data } = await apiClient.post(
+          `/api/chat`,
+          { userId }
+        );
         if (!chats.find((c) => c._id === data._id)) setChats([data, ...chats]);
         console.log("Chat data for selected user: ", data);
         setSelectedChat(data);
@@ -155,9 +165,8 @@ const ChatUsers = () => {
         },
       };
       const userId = "";
-      const { data } = await axios.get(
-        "https://apichainchat.in/api/chat",
-        config
+      const { data } = await apiClient.get(
+        "/api/chat"
       );
       // console.log("Data fetched", data);
       setChats(data);

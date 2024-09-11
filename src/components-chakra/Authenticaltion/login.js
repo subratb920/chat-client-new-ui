@@ -4,6 +4,13 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { ChatState } from '../Context/ChatProvider';
 
+const apiClient = axios.create({
+  baseURL: process.env.REACT_APP_API_URL, // This will pick up the API URL based on the environment
+  timeout: 10000,
+  headers: {
+    "Content-type": "application/json",
+  },
+});
 const Login = () => {
 
     const [name, setName] = useState("");
@@ -36,10 +43,9 @@ const Login = () => {
                     "Content-type": "application/json",
                 },
             };
-            const { data } = await axios.post(
+            const { data } = await apiClient.post(
               "https://apichainchat.in/api/user/login",
-              { email, password },
-              config
+              { email, password }
             );
             console.log("login data: /n", data);
             toast({
