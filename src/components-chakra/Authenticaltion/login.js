@@ -37,14 +37,15 @@ const Login = () => {
             setLoading(false);
             return;
         }
-        try {
+      try {
+          console.log("baseURL:",process.env.REACT_APP_API_URL);
             const config = {
                 headers: {
                     "Content-type": "application/json",
                 },
             };
             const { data } = await apiClient.post(
-              "https://apichainchat.in/api/user/login",
+              "/api/user/login",
               { email, password }
             );
             console.log("login data: /n", data);
