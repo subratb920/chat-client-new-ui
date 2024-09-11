@@ -85,13 +85,17 @@ const Signup = () => {
 
         // Log the axios request config
         console.log("Axios Request Config:", {
-          url: "http://localhost:5000/api/image-url",
+          url: "https://apichainchat.in/api/image-url",
           method: "post",
           data: formData,
           ...config,
         });
         
-        const { data } = await axios.post("/api/image-url/", formData, config);
+        const { data } = await axios.post(
+          "https://apichainchat.in/api/image-url/",
+          formData,
+          config
+        );
         console.log("Image uploaded succesfully: ", data.imageUrl);
         setPic(data.imageUrl);
       } catch (error) {
@@ -139,7 +143,7 @@ const Signup = () => {
         },
       };
       const { data } = await axios.post(
-        "/api/user",
+        "https://apichainchat.in/api/user",
         {
           name,
           email,

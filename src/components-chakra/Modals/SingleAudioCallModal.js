@@ -189,7 +189,7 @@ const SingleAudioCallModal = ({
         },
       };
       const { data } = await axios.put(
-        `/api/chat/group/add`,
+        `https://apichainchat.in/api/chat/group/add`,
         {
           chatId: selectedChat?._id,
           userId: user1._id,

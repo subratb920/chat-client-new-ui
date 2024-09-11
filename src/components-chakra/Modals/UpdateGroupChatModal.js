@@ -102,7 +102,7 @@ const UpdateGroupChatModal = ({ fetchAgain, setFetchAgain, fetchMessages, childr
           },
         };
         const { data } = await axios.put(
-          `/api/chat/group/rename`,
+          `https://apichainchat.in/api/chat/group/rename`,
           {
             chatId: selectedChat?._id,
             chatName: groupChatName,

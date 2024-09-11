@@ -54,7 +54,7 @@ const ChatSection = () => {
         },
       };
       const { data } = await axios.get(
-        `/api/message/${selectedChat._id}`,
+        `https://apichainchat.in/api/message/${selectedChat._id}`,
         config
       );
       // console.log("Messages: ",data);
@@ -85,7 +85,7 @@ const ChatSection = () => {
           },
         };
         const { data } = await axios.post(
-          "/api/message",
+          "https://apichainchat.in/api/message",
           {
             content: newMessage,
             chatId: selectedChat?._id,
