@@ -37,9 +37,9 @@ const Login = () => {
                 },
             };
             const { data } = await axios.post(
-                "/api/user/login",
-                { email, password },
-                config
+              "https://apichainchat.in/api/user/login",
+              { email, password },
+              config
             );
             console.log("login data: /n", data);
             toast({

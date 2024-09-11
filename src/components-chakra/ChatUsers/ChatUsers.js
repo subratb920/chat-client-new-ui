@@ -118,7 +118,7 @@ const ChatUsers = () => {
             Authorization: `Bearer ${user.token}`,
           },
         };
-        const { data } = await axios.post(`/api/chat`, { userId }, config);
+        const { data } = await axios.post(`https://apichainchat.in/api/chat`, { userId }, config);
         if (!chats.find((c) => c._id === data._id)) setChats([data, ...chats]);
         console.log("Chat data for selected user: ", data);
         setSelectedChat(data);
@@ -148,7 +148,10 @@ const ChatUsers = () => {
         },
       };
       const userId = "";
-      const { data } = await axios.get("/api/chat", config);
+      const { data } = await axios.get(
+        "https://apichainchat.in/api/chat",
+        config
+      );
       // console.log("Data fetched", data);
       setChats(data);
       console.log("Chats set", chats);
