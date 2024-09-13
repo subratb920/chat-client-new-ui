@@ -17,7 +17,7 @@ import peer from "../../peer";
 
 const SingleVideoCallModal = ({
   openVideoModal,
-  setOpenVideoModal, // Modal visibility handler
+  setOpenVideoModal,
   remoteUser,
 }) => {
   const socket = useSocket();
@@ -27,108 +27,131 @@ const SingleVideoCallModal = ({
   const myVideoRef = useRef();
   const remoteVideoRef = useRef();
 
-  // ICE Candidate Queue
-  let iceCandidateQueue = [];
-
-  // Function to process queued ICE candidates once remoteSocketId is available
-  const processQueuedIceCandidates = async () => {
-    for (let i = 0; i < iceCandidateQueue.length; i++) {
-      const candidate = iceCandidateQueue[i];
-      console.log("Sending queued ICE candidate:", candidate);
-      socket.emit("ice-candidate", { candidate, userToCall: remoteSocketId });
-    }
-    iceCandidateQueue = []; // Clear queue after processing
-  };
-
-  // Ensure ICE candidates are queued if remoteSocketId is not yet set
+  // Setup ICE Candidate Exchange
   useEffect(() => {
+    // peer.peer.onicecandidate = (event) => {
+    //   if (event.candidate) {
+    //     console.log("Sending ICE Candidate", event.candidate);
+    //     socket.emit("ice-candidate", {
+    //       candidate: event.candidate,
+    //       to: remoteSocketId,
+    //     });
+    //   }
+    // };
+
     peer.peer.onicecandidate = (event) => {
       if (event.candidate) {
+        console.log("Sending ICE Candidate", event.candidate);
+
+        // Ensure remoteSocketId is correctly set
         if (remoteSocketId) {
-          console.log("Sending ICE candidate", event.candidate);
           socket.emit("ice-candidate", {
             candidate: event.candidate,
             userToCall: remoteSocketId,
           });
         } else {
-          console.log(
-            "Queuing ICE candidate because remoteSocketId is not set"
-          );
-          iceCandidateQueue.push(event.candidate); // Queue ICE candidates if remoteSocketId is not available
+          console.error("Error: remoteSocketId is not set.");
         }
       }
     };
-  }, [remoteSocketId, socket]);
 
-  // Handle incoming ICE candidates from the server
-  useEffect(() => {
+    // socket.on("ice-candidate", async (iceCandidate) => {
+    //   if (iceCandidate) {
+    //     console.log("Received ICE Candidate from server: ", iceCandidate);
+    //     try {
+    //       // Log the full candidate object to verify structure
+    //       console.log("iceCandidate object: ", iceCandidate);
+    //       const rtcIcecandidate = new RTCIceCandidate({
+    //         candidate: iceCandidate.candidate,
+    //         sdpMid: iceCandidate.sdpMid,
+    //         sdpMLineIndex: iceCandidate.sdpMLineIndex,
+    //         usernameFragment: iceCandidate.usernameFragment
+    //       });
+    //       console.log("newIcecandidate: ", rtcIcecandidate);
+    //       await peer.peer.addIceCandidate(rtcIcecandidate);
+    //     } catch (error) {
+    //       console.error("Error adding received ICE candidate:", error);
+    //     }
+    //   }
+    // });
+
+    // Temporary array to hold ICE candidates until remote description is set
+    let iceCandidateQueue = [];
+
+    // Function to handle ICE candidates when remote description is set
+    const processIceCandidateQueue = async () => {
+      for (let i = 0; i < iceCandidateQueue.length; i++) {
+        try {
+          console.log("Adding queued ICE candidate:", iceCandidateQueue[i]);
+          await peer.peer.addIceCandidate(iceCandidateQueue[i]);
+        } catch (error) {
+          console.error("Error adding queued ICE candidate:", error);
+        }
+      }
+      iceCandidateQueue = []; // Clear the queue after processing
+    };
+
+    // Handle incoming ICE candidates from the server
     socket.on("ice-candidate", async (iceCandidate) => {
       if (iceCandidate) {
         console.log("Received ICE Candidate from server:", iceCandidate);
+
         try {
+          // Create the RTCIceCandidate from the received candidate data
           const rtcIceCandidate = new RTCIceCandidate({
             candidate: iceCandidate.candidate,
             sdpMid: iceCandidate.sdpMid,
             sdpMLineIndex: iceCandidate.sdpMLineIndex,
           });
 
+          // Check if the remote description is set
           if (peer.peer.remoteDescription) {
+            // Remote description is set, add the ICE candidate directly
             await peer.peer.addIceCandidate(rtcIceCandidate);
             console.log("ICE candidate added successfully");
           } else {
+            // Remote description not set, queue the ICE candidate
             console.log("Remote description not set, queuing ICE candidate");
             iceCandidateQueue.push(rtcIceCandidate);
           }
         } catch (error) {
-          console.error("Error adding ICE candidate:", error);
+          console.error("Error handling received ICE candidate:", error);
         }
       }
     });
 
-    return () => {
-      socket.off("ice-candidate");
-    };
-  }, [socket]);
-
-  // Set the remote description when the call is accepted
-  useEffect(() => {
-    socket.on("call:accepted", async (answer) => {
+    // Set the remote description when an offer/answer is received
+    socket.on("callaccepted", async (answer) => {
       try {
-        console.log("Caller: Call accepted, setting remote description");
+        console.log("Call accepted, setting remote description");
         await peer.peer.setRemoteDescription(new RTCSessionDescription(answer));
-        processQueuedIceCandidates(); // Process queued ICE candidates once the remote description is set
+
+        // Process the queued ICE candidates after setting the remote description
+        processIceCandidateQueue();
       } catch (error) {
-        console.error("Caller: Error setting remote description", error);
+        console.error("Error setting remote description:", error);
       }
     });
 
-    return () => {
-      socket.off("call:accepted");
-    };
-  }, [socket]);
-
-  // Attach remote stream to video element
-  useEffect(() => {
+    // Add track for the remote peer stream
     peer.peer.ontrack = (event) => {
       console.log("Receiving remote stream");
-      setRemoteStream(event.streams[0], event.streams[0]);
-
-      if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = event.streams[0];
-      }
+      setRemoteStream(event.streams[0]);
     };
-  }, []);
 
-  // Handle user call (Caller Side)
+    return () => {
+      socket.off("ice-candidate");
+    };
+  }, [remoteSocketId, socket]);
+
+  // Handle calling a user
   const handleCallUser = useCallback(async () => {
     const stream = await navigator.mediaDevices.getUserMedia({
       audio: true,
       video: true,
     });
     setMyStream(stream);
-
-    // Use stream value directly to avoid state async issues
-    console.log("Stream object prepared:", stream);
+    console.log("Local stream added", stream);
 
     if (myVideoRef.current) {
       myVideoRef.current.srcObject = stream;
@@ -138,86 +161,58 @@ const SingleVideoCallModal = ({
 
     const offer = await peer.getOffer();
     console.log("Sending offer", offer);
-
-    if (remoteSocketId) {
-      console.log("Calling user", remoteSocketId);
-      socket.emit("calluser", {
-        userToCall: remoteSocketId,
-        signalData: offer,
-        from: socket.id,
-      });
-    } else {
-      console.error("Error: remoteSocketId is not set when calling user.");
-    }
+    socket.emit("user:call", { to: remoteSocketId, offer });
   }, [remoteSocketId, socket]);
 
-  // Handle incoming call (Callee Side)
+  // Handle receiving an incoming call
   const handleIncomingCall = useCallback(
     async ({ from, offer }) => {
-      console.log("Incoming call from", from);
-      if (!from) {
-        console.error("Error: 'from' is null or undefined.");
-        return;
-      }
-
-      // Automatically open the video modal
-      setOpenVideoModal(true);
-      console.log("Setting RemoteSocketId to 'from':", from);
       setRemoteSocketId(from);
+      console.log("Incoming call from", from);
 
-      // Use stream value directly to avoid state async issues
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
         video: true,
       });
       setMyStream(stream);
-      console.log("Stream object prepared:", stream);
-
       if (myVideoRef.current) {
         myVideoRef.current.srcObject = stream;
       }
 
-      stream.getTracks().forEach((track) => {
-        console.log("Callee: Adding track", track);
-        peer.peer.addTrack(track, stream);
-      });
+      stream.getTracks().forEach((track) => peer.peer.addTrack(track, stream));
 
-      // Set remote description (offer)
-      console.log("Setting remote description to offer:", offer);
-      await peer.peer.setRemoteDescription(new RTCSessionDescription(offer));
-
-      // Process queued ICE candidates now that the remote description is set
-      processQueuedIceCandidates();
-
-      // Create an answer and send it to the caller
-      console.log("Creating answer");
-      const answer = await peer.peer.createAnswer();
-      console.log("Answer created:", answer);
-      await peer.peer.setLocalDescription(answer);
+      const answer = await peer.getAnswer(offer);
+      console.log("Sending answer", answer);
       socket.emit("call:accepted", { to: from, answer });
-      console.log("Answer sent to caller", answer);
     },
     [socket]
   );
 
-  // Attach the remote stream to the video element once it's received
+  // Handle call being accepted
+  const handleCallAccepted = useCallback(({ answer }) => {
+    console.log("Call accepted, setting remote description", answer);
+    peer.setLocalDescription(answer);
+  }, []);
+
+  useEffect(() => {
+    socket.on("user:joined", ({ id }) => setRemoteSocketId(id));
+    socket.on("incoming:call", handleIncomingCall);
+    socket.on("call:accepted", handleCallAccepted);
+
+    return () => {
+      socket.off("user:joined");
+      socket.off("incoming:call");
+      socket.off("call:accepted");
+    };
+  }, [handleIncomingCall, handleCallAccepted, socket]);
+
+  // Attach the remote stream to the video element
   useEffect(() => {
     if (remoteStream && remoteVideoRef.current) {
       remoteVideoRef.current.srcObject = remoteStream;
       console.log("Attached remote stream to video element");
     }
   }, [remoteStream]);
-
-  // Listen for user joining and call events
-  useEffect(() => {
-    socket.on("user:joined", ({ id }) => setRemoteSocketId(id)); // Set remoteSocketId when a user joins
-    socket.on("incoming:call", handleIncomingCall); // Handle incoming call
-
-    return () => {
-      socket.off("user:joined");
-      socket.off("incoming:call");
-    };
-  }, [handleIncomingCall, socket]);
 
   return (
     <div>
