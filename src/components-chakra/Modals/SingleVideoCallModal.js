@@ -76,14 +76,39 @@ const SingleVideoCallModal = ({
 
       setRemoteStream(event.streams[0]);
 
-      if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = event.streams[0];
-        console.log("Attached remote stream to video element");
+      //   if (remoteVideoRef.current) {
+      //     remoteVideoRef.current.srcObject = event.streams[0];
+      //     console.log("Attached remote stream to video element");
 
-        // Explicitly start playing the video if it's not playing
-        remoteVideoRef.current.play().catch((error) => {
-          console.error("Error playing remote video:", error);
-        });
+      //     // Explicitly start playing the video if it's not playing
+      //     remoteVideoRef.current.play().catch((error) => {
+      //       console.error("Error playing remote video:", error);
+      //     });
+      //   }
+      // };
+    
+      if (remoteStream && remoteVideoRef.current) {
+        // Stop the previous video stream if there is one
+        if (remoteVideoRef.current.srcObject) {
+          console.log("Stopping previous remote video stream");
+          remoteVideoRef.current.srcObject
+            .getTracks()
+            .forEach((track) => track.stop());
+          remoteVideoRef.current.srcObject = null;
+        }
+
+        // Attach the new remote stream
+        remoteVideoRef.current.srcObject = remoteStream;
+        console.log("Attached new remote stream to video element");
+
+        // Ensure the video plays when the metadata is fully loaded, with a slight delay
+        remoteVideoRef.current.onloadedmetadata = () => {
+          setTimeout(() => {
+            remoteVideoRef.current.play().catch((error) => {
+              console.error("Error playing remote video:", error);
+            });
+          }, 100); // Delay playback by 100ms to avoid race conditions
+        };
       }
     };
 
