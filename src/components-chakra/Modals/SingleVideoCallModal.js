@@ -294,20 +294,20 @@ const SingleVideoCallModal = ({
           <ModalBody>
             <Grid gap={2}>
               <GridItem>
-                <Text>My Video</Text>
-                <video
-                  ref={myVideoRef}
-                  autoPlay
-                  muted
-                  style={{ width: "100%" }}
-                />
-              </GridItem>
-              <GridItem>
                 <Text>{remoteUser.name}'s Video</Text>
                 <video
                   ref={remoteVideoRef}
                   autoPlay
-                  muted={true} // Test if muting resolves the autoplay issue
+                  muted={false} // Test if muting resolves the autoplay issue
+                  style={{ width: "100%" }}
+                />
+              </GridItem>
+              <GridItem>
+                <Text>My Video</Text>
+                <video
+                  ref={myVideoRef}
+                  autoPlay
+                  muted={false}
                   style={{ width: "100%" }}
                 />
               </GridItem>
