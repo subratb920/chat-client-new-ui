@@ -79,6 +79,11 @@ const SingleVideoCallModal = ({
       if (remoteVideoRef.current) {
         remoteVideoRef.current.srcObject = event.streams[0];
         console.log("Attached remote stream to video element");
+
+        // Explicitly start playing the video if it's not playing
+        remoteVideoRef.current.play().catch((error) => {
+          console.error("Error playing remote video:", error);
+        });
       }
     };
 
@@ -168,19 +173,66 @@ const SingleVideoCallModal = ({
       const answer = await peer.peer.createAnswer();
       console.log("Answer created:", answer);
       await peer.peer.setLocalDescription(answer);
-      socket.emit("call:accepted", { to: from, answer });
+      socket.emit("answercall", { to: from, signal: answer }); // Send 'answercall'
       console.log("Answer sent to caller", answer);
     },
     [socket]
   );
 
+  // Handle receiving answer and setting the remote description on the caller side
+  useEffect(() => {
+    socket.on("call:accepted", async (answer) => {
+      try {
+        console.log("Caller: Call accepted, setting remote description");
+        await peer.peer.setRemoteDescription(new RTCSessionDescription(answer));
+
+        // Process queued ICE candidates after setting the remote description
+        processQueuedIceCandidates();
+      } catch (error) {
+        console.error("Caller: Error setting remote description", error);
+      }
+    });
+
+    return () => {
+      socket.off("call:accepted");
+    };
+  }, [socket]);
+
   // Attach the remote stream to the video element once it's received
+  // useEffect(() => {
+  //   if (remoteStream && remoteVideoRef.current) {
+  //     remoteVideoRef.current.srcObject = remoteStream;
+  //     console.log("Attached remote stream to video element");
+  //   }
+  // }, [remoteStream]);
+
   useEffect(() => {
     if (remoteStream && remoteVideoRef.current) {
+      // Stop the previous video stream if there is one
+      if (remoteVideoRef.current.srcObject) {
+        console.log("Stopping previous remote video stream");
+        remoteVideoRef.current.srcObject
+          .getTracks()
+          .forEach((track) => track.stop());
+        remoteVideoRef.current.srcObject = null;
+      }
+
+      // Attach the new remote stream
       remoteVideoRef.current.srcObject = remoteStream;
-      console.log("Attached remote stream to video element");
+      console.log("Attached new remote stream to video element");
+
+      // Ensure the video plays when the metadata is fully loaded, with a slight delay
+      remoteVideoRef.current.onloadedmetadata = () => {
+        setTimeout(() => {
+          remoteVideoRef.current.play().catch((error) => {
+            console.error("Error playing remote video:", error);
+          });
+        }, 100); // Delay playback by 100ms to avoid race conditions
+      };
     }
   }, [remoteStream]);
+
+
 
   // Listen for user joining and call events
   useEffect(() => {
@@ -230,6 +282,7 @@ const SingleVideoCallModal = ({
                 <video
                   ref={remoteVideoRef}
                   autoPlay
+                  muted={true} // Test if muting resolves the autoplay issue
                   style={{ width: "100%" }}
                 />
               </GridItem>
