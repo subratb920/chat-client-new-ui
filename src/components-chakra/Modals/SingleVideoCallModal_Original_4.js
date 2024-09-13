@@ -40,55 +40,84 @@ const SingleVideoCallModal = ({
     iceCandidateQueue = []; // Clear queue after processing
   };
 
-  // Monitor WebRTC connection state and handle media tracks
+  // Ensure ICE candidates are queued if remoteSocketId is not yet set
   useEffect(() => {
-    // Monitor connection state
-    peer.peer.onconnectionstatechange = () => {
-      console.log("Connection state change:", peer.peer.connectionState);
-
-      if (peer.peer.connectionState === "connected") {
-        console.log("Peers connected successfully");
-      } else if (
-        peer.peer.connectionState === "disconnected" ||
-        peer.peer.connectionState === "failed"
-      ) {
-        console.error("Connection failed or disconnected");
-      }
-    };
-
-    // Handle ICE candidates
     peer.peer.onicecandidate = (event) => {
-      if (event.candidate && remoteSocketId) {
-        console.log("Sending ICE Candidate", event.candidate);
-        socket.emit("ice-candidate", {
-          candidate: event.candidate,
-          userToCall: remoteSocketId,
-        });
-      } else {
-        console.log("Queuing ICE Candidate, remoteSocketId not set");
-        iceCandidateQueue.push(event.candidate); // Queue ICE candidates if remoteSocketId is not available
+      if (event.candidate) {
+        if (remoteSocketId) {
+          console.log("Sending ICE candidate", event.candidate);
+          socket.emit("ice-candidate", {
+            candidate: event.candidate,
+            userToCall: remoteSocketId,
+          });
+        } else {
+          console.log(
+            "Queuing ICE candidate because remoteSocketId is not set"
+          );
+          iceCandidateQueue.push(event.candidate); // Queue ICE candidates if remoteSocketId is not available
+        }
       }
     };
+  }, [remoteSocketId, socket]);
 
-    // Handle receiving remote stream
+  // Handle incoming ICE candidates from the server
+  useEffect(() => {
+    socket.on("ice-candidate", async (iceCandidate) => {
+      if (iceCandidate) {
+        console.log("Received ICE Candidate from server:", iceCandidate);
+        try {
+          const rtcIceCandidate = new RTCIceCandidate({
+            candidate: iceCandidate.candidate,
+            sdpMid: iceCandidate.sdpMid,
+            sdpMLineIndex: iceCandidate.sdpMLineIndex,
+          });
+
+          if (peer.peer.remoteDescription) {
+            await peer.peer.addIceCandidate(rtcIceCandidate);
+            console.log("ICE candidate added successfully");
+          } else {
+            console.log("Remote description not set, queuing ICE candidate");
+            iceCandidateQueue.push(rtcIceCandidate);
+          }
+        } catch (error) {
+          console.error("Error adding ICE candidate:", error);
+        }
+      }
+    });
+
+    return () => {
+      socket.off("ice-candidate");
+    };
+  }, [socket]);
+
+  // Set the remote description when the call is accepted
+  useEffect(() => {
+    socket.on("call:accepted", async (answer) => {
+      try {
+        console.log("Caller: Call accepted, setting remote description");
+        await peer.peer.setRemoteDescription(new RTCSessionDescription(answer));
+        processQueuedIceCandidates(); // Process queued ICE candidates once the remote description is set
+      } catch (error) {
+        console.error("Caller: Error setting remote description", error);
+      }
+    });
+
+    return () => {
+      socket.off("call:accepted");
+    };
+  }, [socket]);
+
+  // Attach remote stream to video element
+  useEffect(() => {
     peer.peer.ontrack = (event) => {
-      console.log("Receiving remote stream:", event.streams[0]);
-
-      setRemoteStream(event.streams[0]);
+      console.log("Receiving remote stream");
+      setRemoteStream(event.streams[0], event.streams[0]);
 
       if (remoteVideoRef.current) {
         remoteVideoRef.current.srcObject = event.streams[0];
-        console.log("Attached remote stream to video element");
       }
     };
-
-    return () => {
-      // Cleanup event listeners when the component unmounts
-      peer.peer.onconnectionstatechange = null;
-      peer.peer.onicecandidate = null;
-      peer.peer.ontrack = null;
-    };
-  }, [remoteSocketId, socket]);
+  }, []);
 
   // Handle user call (Caller Side)
   const handleCallUser = useCallback(async () => {
@@ -105,10 +134,7 @@ const SingleVideoCallModal = ({
       myVideoRef.current.srcObject = stream;
     }
 
-    stream.getTracks().forEach((track) => {
-      console.log("Caller: Adding track", track);
-      peer.peer.addTrack(track, stream); // Add caller's media tracks
-    });
+    stream.getTracks().forEach((track) => peer.peer.addTrack(track, stream));
 
     const offer = await peer.getOffer();
     console.log("Sending offer", offer);
@@ -134,29 +160,29 @@ const SingleVideoCallModal = ({
         return;
       }
 
-      // Automatically open the video modal when receiving a call
-      setOpenVideoModal(true); // Ensure the modal opens immediately
+      // Automatically open the video modal
+      setOpenVideoModal(true);
       console.log("Setting RemoteSocketId to 'from':", from);
-      setRemoteSocketId(from); // Set remote socket ID to the caller's ID
+      setRemoteSocketId(from);
 
-      // Get local media stream
+      // Use stream value directly to avoid state async issues
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
         video: true,
       });
       setMyStream(stream);
+      console.log("Stream object prepared:", stream);
 
       if (myVideoRef.current) {
         myVideoRef.current.srcObject = stream;
       }
 
-      // Add callee's media tracks to the WebRTC peer connection
       stream.getTracks().forEach((track) => {
         console.log("Callee: Adding track", track);
-        peer.peer.addTrack(track, stream); // Add callee's media tracks
+        peer.peer.addTrack(track, stream);
       });
 
-      // Set the remote description (offer)
+      // Set remote description (offer)
       console.log("Setting remote description to offer:", offer);
       await peer.peer.setRemoteDescription(new RTCSessionDescription(offer));
 
