@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   IconButton,
-  Button,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -11,14 +10,10 @@ import {
   Grid,
   GridItem,
   Text,
-  Stack,
-  useDisclosure,
 } from "@chakra-ui/react";
 import { IoVideocamOutline } from "react-icons/io5";
 import { useSocket } from "../Context/SocketProvider";
 import peer from "../../peer";
-import { VscUnmute } from "react-icons/vsc";
-import { PhoneIcon } from "@chakra-ui/icons";
 
 const SingleVideoCallModal = ({
   openVideoModal,
@@ -29,9 +24,6 @@ const SingleVideoCallModal = ({
   const [remoteSocketId, setRemoteSocketId] = useState(null);
   const [myStream, setMyStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
-  const [callAccepted, setCallAccepted] = useState(false); // Track call acceptance
-  const [incomingCall, setIncomingCall] = useState(null); // Track incoming call
-  const { isOpen, onOpen, onClose } = useDisclosure(); // Chakra UI modal controls
   const myVideoRef = useRef();
   const remoteVideoRef = useRef();
 
@@ -48,18 +40,9 @@ const SingleVideoCallModal = ({
     iceCandidateQueue = []; // Clear queue after processing
   };
 
-  // Function to reinitialize WebRTC peer connection for new calls
-  const reinitializePeerConnection = () => {
-    if (peer.peer) {
-      peer.peer.close();
-    }
-    peer.peer = new RTCPeerConnection(); // Reinitialize WebRTC peer connection
-    console.log("Peer connection reinitialized");
-  };
-
   // Monitor WebRTC connection state and handle media tracks
   useEffect(() => {
-    reinitializePeerConnection();
+    // Monitor connection state
     peer.peer.onconnectionstatechange = () => {
       console.log("Connection state change:", peer.peer.connectionState);
 
@@ -73,6 +56,7 @@ const SingleVideoCallModal = ({
       }
     };
 
+    // Handle ICE candidates
     peer.peer.onicecandidate = (event) => {
       if (event.candidate && remoteSocketId) {
         console.log("Sending ICE Candidate", event.candidate);
@@ -86,11 +70,23 @@ const SingleVideoCallModal = ({
       }
     };
 
+    // Handle receiving remote stream
     peer.peer.ontrack = (event) => {
       console.log("Receiving remote stream:", event.streams[0]);
 
       setRemoteStream(event.streams[0]);
 
+      //   if (remoteVideoRef.current) {
+      //     remoteVideoRef.current.srcObject = event.streams[0];
+      //     console.log("Attached remote stream to video element");
+
+      //     // Explicitly start playing the video if it's not playing
+      //     remoteVideoRef.current.play().catch((error) => {
+      //       console.error("Error playing remote video:", error);
+      //     });
+      //   }
+      // };
+    
       if (remoteStream && remoteVideoRef.current) {
         // Stop the previous video stream if there is one
         if (remoteVideoRef.current.srcObject) {
@@ -117,6 +113,7 @@ const SingleVideoCallModal = ({
     };
 
     return () => {
+      // Cleanup event listeners when the component unmounts
       peer.peer.onconnectionstatechange = null;
       peer.peer.onicecandidate = null;
       peer.peer.ontrack = null;
@@ -130,6 +127,9 @@ const SingleVideoCallModal = ({
       video: true,
     });
     setMyStream(stream);
+
+    // Use stream value directly to avoid state async issues
+    console.log("Stream object prepared:", stream);
 
     if (myVideoRef.current) {
       myVideoRef.current.srcObject = stream;
@@ -155,13 +155,21 @@ const SingleVideoCallModal = ({
     }
   }, [remoteSocketId, socket]);
 
-  // Handle call accept by callee
-  const handleAcceptCall = useCallback(
-    async (from, offer) => {
-      setCallAccepted(true); // Mark the call as accepted
-      setOpenVideoModal(true);
-      onClose(); // Close the accept/reject modal once the call is accepted
+  // Handle incoming call (Callee Side)
+  const handleIncomingCall = useCallback(
+    async ({ from, offer }) => {
+      console.log("Incoming call from", from);
+      if (!from) {
+        console.error("Error: 'from' is null or undefined.");
+        return;
+      }
 
+      // Automatically open the video modal when receiving a call
+      setOpenVideoModal(true); // Ensure the modal opens immediately
+      console.log("Setting RemoteSocketId to 'from':", from);
+      setRemoteSocketId(from); // Set remote socket ID to the caller's ID
+
+      // Get local media stream
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
         video: true,
@@ -172,36 +180,28 @@ const SingleVideoCallModal = ({
         myVideoRef.current.srcObject = stream;
       }
 
+      // Add callee's media tracks to the WebRTC peer connection
       stream.getTracks().forEach((track) => {
         console.log("Callee: Adding track", track);
         peer.peer.addTrack(track, stream); // Add callee's media tracks
       });
 
+      // Set the remote description (offer)
       console.log("Setting remote description to offer:", offer);
       await peer.peer.setRemoteDescription(new RTCSessionDescription(offer));
 
+      // Process queued ICE candidates now that the remote description is set
       processQueuedIceCandidates();
 
+      // Create an answer and send it to the caller
+      console.log("Creating answer");
       const answer = await peer.peer.createAnswer();
       console.log("Answer created:", answer);
       await peer.peer.setLocalDescription(answer);
-      socket.emit("answercall", { to: from, signal: answer });
+      socket.emit("answercall", { to: from, signal: answer }); // Send 'answercall'
       console.log("Answer sent to caller", answer);
     },
-    [socket, setOpenVideoModal, onClose]
-  );
-
-  // Handle incoming call (Callee Side)
-  const handleIncomingCall = useCallback(
-    async ({ from, offer }) => {
-      console.log("Incoming call from", from);
-      setRemoteSocketId(from);
-
-      // Set incoming call info to display accept/reject buttons
-      setIncomingCall({ from, offer });
-      onOpen(); // Open the modal to show accept/reject buttons
-    },
-    [onOpen]
+    [socket]
   );
 
   // Handle receiving answer and setting the remote description on the caller side
@@ -211,7 +211,8 @@ const SingleVideoCallModal = ({
         console.log("Caller: Call accepted, setting remote description");
         await peer.peer.setRemoteDescription(new RTCSessionDescription(answer));
 
-        processQueuedIceCandidates(); // Process queued ICE candidates after setting the remote description
+        // Process queued ICE candidates after setting the remote description
+        processQueuedIceCandidates();
       } catch (error) {
         console.error("Caller: Error setting remote description", error);
       }
@@ -222,41 +223,30 @@ const SingleVideoCallModal = ({
     };
   }, [socket]);
 
-  // Function to toggle video (on/off)
-  const toggleVideo = () => {
-    if (myStream) {
-      const videoTrack = myStream.getVideoTracks()[0]; // Get the first video track
-      if (videoTrack) {
-        videoTrack.enabled = !videoTrack.enabled; // Toggle video track on/off
-        console.log(`Video is now ${videoTrack.enabled ? "on" : "off"}`);
-      }
-    }
-  };
-
-  // Function to toggle audio (mute/unmute)
-  const toggleAudio = () => {
-    if (myStream) {
-      const audioTrack = myStream.getAudioTracks()[0]; // Get the first audio track
-      if (audioTrack) {
-        audioTrack.enabled = !audioTrack.enabled; // Toggle audio track on/off
-        console.log(`Audio is now ${audioTrack.enabled ? "unmuted" : "muted"}`);
-      }
-    }
-  };
+  // Attach the remote stream to the video element once it's received
+  // useEffect(() => {
+  //   if (remoteStream && remoteVideoRef.current) {
+  //     remoteVideoRef.current.srcObject = remoteStream;
+  //     console.log("Attached remote stream to video element");
+  //   }
+  // }, [remoteStream]);
 
   useEffect(() => {
     if (remoteStream && remoteVideoRef.current) {
+      // Stop the previous video stream if there is one
       if (remoteVideoRef.current.srcObject) {
+        console.log("Stopping previous remote video stream");
         remoteVideoRef.current.srcObject
           .getTracks()
           .forEach((track) => track.stop());
         remoteVideoRef.current.srcObject = null;
-        console.log("Stopped previous remote video stream");
       }
 
+      // Attach the new remote stream
       remoteVideoRef.current.srcObject = remoteStream;
       console.log("Attached new remote stream to video element");
 
+      // Ensure the video plays when the metadata is fully loaded, with a slight delay
       remoteVideoRef.current.onloadedmetadata = () => {
         setTimeout(() => {
           remoteVideoRef.current.play().catch((error) => {
@@ -267,38 +257,7 @@ const SingleVideoCallModal = ({
     }
   }, [remoteStream]);
 
-  // Disconnect video call
-  const disconnectCall = () => {
-    console.log("Disconnecting the video call");
 
-    // Stop all media tracks from myStream (local video/audio)
-    if (myStream) {
-      myStream.getTracks().forEach((track) => track.stop());
-      setMyStream(null);
-    }
-
-    // Stop the remote stream
-    if (remoteStream && remoteVideoRef.current) {
-      remoteVideoRef.current.srcObject
-        .getTracks()
-        .forEach((track) => track.stop());
-      remoteVideoRef.current.srcObject = null;
-      setRemoteStream(null);
-    }
-
-    // Close the peer connection
-    if (peer.peer) {
-      peer.peer.close();
-      console.log("Peer connection closed");
-    }
-
-    // Reset the UI and close the video modal
-    setCallAccepted(false);
-    setOpenVideoModal(false);
-
-    // Notify the server to end the call\
-    socket.emit("call-ended", { to: remoteSocketId });
-  };
 
   // Listen for user joining and call events
   useEffect(() => {
@@ -311,76 +270,8 @@ const SingleVideoCallModal = ({
     };
   }, [handleIncomingCall, socket]);
 
-  useEffect(() => {
-    // Listen for the call-ended event to close the modal when the other peer ends the call
-    socket.on("call-ended", () => {
-      console.log("Call ended by the other peer");
-
-      // Stop all media tracks from myStream (local video/audio)
-      if (myStream) {
-        myStream.getTracks().forEach((track) => track.stop());
-        setMyStream(null);
-      }
-
-      // Stop the remote stream
-      if (remoteStream && remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject
-          .getTracks()
-          .forEach((track) => track.stop());
-        remoteVideoRef.current.srcObject = null;
-        setRemoteStream(null);
-      }
-
-      // Close the peer connection
-      if (peer.peer) {
-        peer.peer.close();
-        console.log("Peer connection closed");
-      }
-
-      // Reset the UI and close the video modal
-      setCallAccepted(false);
-      setOpenVideoModal(false);
-    });
-
-    return () => {
-      socket.off("call-ended"); // Cleanup event listener
-    };
-  }, [myStream, remoteStream]);
-
-
   return (
     <div>
-      {!callAccepted && incomingCall && (
-        <Modal isOpen={isOpen} onClose={onClose} isCentered>
-          <ModalContent
-            background="white"
-            border="2px solid black"
-            borderRadius="10px"
-            padding="20px"
-          >
-            <ModalHeader>Incoming Video Call</ModalHeader>
-            <ModalCloseButton />
-            <ModalBody>
-              <Text>{remoteUser.name} is calling you...</Text>
-              <Stack spacing={4} direction="row" justify="center" mt={4}>
-                <Button
-                  colorScheme="green"
-                  onClick={() =>
-                    handleAcceptCall(incomingCall.from, incomingCall.offer)
-                  }
-                >
-                  Accept
-                </Button>
-                <Button colorScheme="red" onClick={onClose}>
-                  Reject
-                </Button>
-              </Stack>
-            </ModalBody>
-          </ModalContent>
-        </Modal>
-      )}
-
-      {/* Video Call Modal */}
       <IconButton
         isRound
         margin={2}
@@ -422,35 +313,13 @@ const SingleVideoCallModal = ({
               </GridItem>
             </Grid>
           </ModalBody>
-          {/* <ModalFooter
-              d="flex"
-              justifyContent={"center"}
-              backgroundColor={"black"}
-            > */}
           <ModalFooter>
             <IconButton
-              margin={2}
-              colorScheme="green"
-              aria-label="Call Segun"
-              size="lg"
-              icon={<VscUnmute />}
-              onClick={toggleAudio}
-            />
-            <IconButton
-              margin={2}
-              colorScheme="blue"
-              aria-label="Call Segun"
+              colorScheme="red"
+              aria-label="End Call"
               size="lg"
               icon={<IoVideocamOutline />}
-              onClick={toggleVideo}
-            />
-            <IconButton
-              margin={2}
-              colorScheme="red"
-              aria-label="Call Segun"
-              size="lg"
-              icon={<PhoneIcon />}
-              onClick={disconnectCall}
+              onClick={() => setOpenVideoModal(false)}
             />
           </ModalFooter>
         </ModalContent>

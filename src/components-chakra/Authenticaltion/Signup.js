@@ -80,32 +80,48 @@ const Signup = () => {
         formData.append("image",pics, pics.name);
 
         // Log the FormData contents
-        // for (const [key, value] of formData.entries()) {
-        //   console.log(`${key}:`, value);
-        // }
+        for (const [key, value] of formData.entries()) {
+          console.log(`${key}:`, value);
+        }
 
         const config = {
           headers: {
             "Content-type": "multipart/form-data",
           },
         };
-
-        // Log the axios request config
-        console.log("Axios Request Config:", {
-          url: "https://apichainchat.in/api/image-url",
-          method: "post",
-          data: formData,
-          ...config,
-        });
+        const URL = process.env.REACT_APP_API_URL + "/api/image-url";
+          // Log the axios request config
+          console.log("Axios Request Config:", {
+            url: URL + "/api/image-url",
+            method: "post",
+            data: formData,
+            ...config,
+          });
         
-        const { data } = await apiClient.post(
-          "/api/image-url/",
-          formData
+        const { data } = await axios.post(
+          URL,
+          formData,
+          config
         );
         console.log("Image uploaded succesfully: ", data.imageUrl);
+        toast({
+          title: "Image uploaded succesfully",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+          position: "top",
+        });
         setPic(data.imageUrl);
       } catch (error) {
         console.log(error);
+        toast({
+          title: "Error uploading Image",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+          position: "top",
+        });
+        setLoading(false);
       }
     } else {
     toast({
@@ -149,7 +165,7 @@ const Signup = () => {
         },
       };
       const { data } = await apiClient.post(
-        "https://apichainchat.in/api/user",
+        "/api/user",
         {
           name,
           email,
