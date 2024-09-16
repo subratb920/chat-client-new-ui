@@ -39,6 +39,7 @@ const ChatUsers = () => {
   });
 
   const handleSearch = async () => {
+    console.log("handleSearch called...");
     if (!search) {
       setLoading(true);
       // console.log("Please enter something in search");
@@ -155,6 +156,31 @@ const ChatUsers = () => {
     }
   };
 
+  // const fetchChatBot = async () => {
+  //   try {
+  //     const config = {
+  //       headers: {
+  //         Authorization: `Bearer ${user.token}`,
+  //       },
+  //     };
+  //     const { chatbotUser } = await apiClient.get(
+  //       `/api/user?search=/"chainchat-bot/"`
+  //     );
+  //     console.log("chainChatbot User fetched : ", chatbotUser?._id);
+  //     // setChats([chatbotUser, ...chats]);
+  //   } catch (error) {
+  //     toast({
+  //       title: "Error Occured!",
+  //       description: "Failed to Load the chats",
+  //       status: "error",
+  //       duration: 5000,
+  //       isClosable: true,
+  //       position: "bottom-left",
+  //     });
+  //   }
+  // };
+
+
   const fetchChats = async () => {
     // const { initMsg } = await axios.get("/");
     // console.log("initMsg: ", initMsg);
@@ -165,10 +191,33 @@ const ChatUsers = () => {
         },
       };
       const userId = "";
+      const bot = await apiClient.get(
+        `/api/user?search=chainchat-bot`
+      );
+      if (bot === undefined) {
+        toast({
+          title: "Error Occured!",
+          description: "Failed to Load the chatbot",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+          position: "bottom-left",
+        })
+      }
+      console.log("chatbot user data recieved: ", bot.data);
+      const chatBot = bot.data[0];
+      console.log("chatbot user id: ", chatBot?._id);
+      const botUserId = chatBot?._id;
+
+      const { botChatData } = await apiClient.post(`/api/chat`, {
+        userId: botUserId,
+      });
+      console.log("Bot chat data: ", botChatData);
+      
       const { data } = await apiClient.get(
         "/api/chat"
       );
-      // console.log("Data fetched", data);
+      console.log("Data fetched", data);
       setChats(data);
       console.log("Chats set", chats);
     } catch (error) {
@@ -262,6 +311,7 @@ const ChatUsers = () => {
 
   useEffect(() => {
     setLoggedUser(JSON.parse(localStorage.getItem("userInfo")));
+    // fetchChatBot();
     fetchChats();
     // console.log("ChatUsers useEffect called");
     // console.log("loggedUser: ", loggedUser);
